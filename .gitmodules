@@ -1,0 +1,6 @@
+[submodule "libs/LibEvents-1.0"]
+	path = libs/LibEvents-1.0
+	url = https://github.com/BannZay/LibEvents-1.0
+[submodule "libs/LibLogger-1.0"]
+	path = libs/LibLogger-1.0
+	url = https://github.com/BannZay/LibLogger-1.0

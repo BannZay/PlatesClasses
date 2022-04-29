@@ -1,0 +1,9 @@
+## Interface: 30300
+## Title: PlatesClasses
+## Author: BannZay
+## Notes: Adds class icon to nameplates
+## Version: v1.0
+## DefaultState: Enabled
+## SavedVariables: DB
+
+PlatesClasses.xml

@@ -1,0 +1,10 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/">
+    <Include file="embeds.xml"/>
+    <Script file="PlatesClasses.lua"/>
+    
+    <Script file="Utils\DbConfig.lua"/>
+    
+    <Script file="modules\CachingModule.lua"/>
+    <Script file="modules\CachingModule_PlayerClassesConverter.lua"/>
+    <Script file="modules\ConfigModule.lua"/>
+</Ui>
