@@ -3,8 +3,10 @@
     <Script file="PlatesClasses.lua"/>
     
     <Script file="Utils\DbConfig.lua"/>
+    <Script file="Utils\Iterator.lua"/>
     
-    <Script file="modules\CachingModule.lua"/>
-    <Script file="modules\CachingModule_PlayerClassesConverter.lua"/>
-    <Script file="modules\ConfigModule.lua"/>
+    <Script file="modules\CacheModule.lua"/>
+    <Script file="modules\CacheModule_PlayerClassesConverter.lua"/>
+    <Script file="modules\TotemsModule.lua"/>
+    <Script file="modules\PlayerClassesModule.lua"/>
 </Ui>

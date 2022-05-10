@@ -11,44 +11,38 @@ module.cachingStorages = {}
 
 local Utils = addon.Utils;
 
-
 local oldStorages = {}
 
 function module:OnInitialize()
-	local db = addon.dbRoot;
-	
 	self.cachingStorages = 
 	{
 		PlayerClasses = self:CreateStorage("PlayerClasses")
 	}
-	
-	if db.global.Cache == nil then
-		db.global.Cache = {
-			Enabled = true,
+
+	self.oldStorages = {}
+end
+
+function module:OnDbInitialized(db, dbRoot)
+	self:SetEnabledState(self.db.Enabled or true);
+	self.Cache = dbRoot.global.Cache
+end
+
+function module:GetDbMigrations()
+	local migrations = {}
+
+	migrations[1] = function(db, dbRoot)
+		db.Enabled = true;
+		
+		dbRoot.global.Cache = 
+		{
 			PlayerClasses = {}
 		}
 	end
-	self.db = db.global.Cache;
-	
-	for category, cachingStorage in pairs(self.cachingStorages) do
-		if self.db[category] == nil then
-			self.db[category] = {}
-		end
-	end
-	
-	self.oldStorages = {}
-	
-	log:Log(5, module.name .. "Initialized");
+
+	return migrations;
 end
 
 function module:OnEnable()
-	log:Log(40, self.name, "enabled");
-	
-	if self.db.Enabled == false then
-		module:Disable();
-		return;
-	end
-
 	for categoryName, storage in pairs(self.cachingStorages) do
 		self.oldStorages[categoryName] = addon:GetStorage(categoryName);
 		addon:SetStorage("PlayerClasses", storage);
@@ -59,8 +53,6 @@ function module:OnDisable()
 	for categoryName, storage in pairs(self.oldStorages) do
 		addon:SetStorage(categoryName, storage);
 	end
-	
-	log:Log(5, module.name, "Disabled");
 end
 
 function module:CreateStorage(category)
@@ -68,9 +60,9 @@ function module:CreateStorage(category)
 		error()
 	end
 	
-	local get = function(storage, key) return self.db[category][key] end
-	local set = function(storage, key, value) self.db[category][key] = value end
-	local reset = function(storage, key) self.db[category] = {} end
+	local get = function(storage, key) return self.Cache[category][key] end
+	local set = function(storage, key, value) self.Cache[category][key] = value end
+	local reset = function(storage, key) self.Cache[category] = {} end
 	
 	return {
 		Category = category,
@@ -82,20 +74,12 @@ end
 
 function module:BuildBlizzardOptions()
 	local dbConnection = Utils.DbConfig:New(function(key) return self.db end);
-	
-	local iterator = 
-	{
-		value = -1,
-		Next = function (self)
-			self.value = self.value + 1
-			return self.value;
-		end
-	}
+	local iterator = Utils.Iterator:New();
 	
 	local options = 
 	{
 		type = "group",
-		name = module.name,
+		name = module.moduleName,
 		get = dbConnection.Get,
 		set = dbConnection.Set,
 		args = {}
@@ -106,7 +90,7 @@ function module:BuildBlizzardOptions()
 		type = "description",
 		name = "Caches classes of players to accounts config.",
 		fontSize = "medium",
-		order = iterator:Next()
+		order = iterator()
 	}
 	
 	options.args["Enabled"] = 
@@ -115,7 +99,7 @@ function module:BuildBlizzardOptions()
 		name = "Enabled",
 		desc = "",
 		set = dbConnection:BuildSetter(function(newState) if newState then module:Enable() else module:Disable() end end),
-		order = iterator:Next()
+		order = iterator()
 	}
 	
 	options.args["Reset"] = 
@@ -123,7 +107,8 @@ function module:BuildBlizzardOptions()
 		type = "execute",
 		name = "Reset Cache",
 		func = function() for categoryName, storage in pairs(self.cachingStorages) do storage:Reset(); end addon:UpdateAllNameplates() end,
-		order = iterator:Next()
+		order = iterator(),
+		confirm = true
 	}
 	
 	return options
