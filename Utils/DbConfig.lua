@@ -4,17 +4,33 @@ local addon = AceAddon:GetAddon("PlatesClasses");
 local DbConfig = {}
 addon.Utils.DbConfig = DbConfig;
 
-function DbConfig:New(dbProvider, onValueUpdatedFunc)
+function DbConfig:New(dbProvider, onValueUpdatedFunc, nameOrNamedObject)
 	local obj = {}
 	
 	function obj.Get(info)
 		local key = info.arg or info[#info];
-		return dbProvider(key)[key];
+		
+		local db = dbProvider(key)
+		
+		if db == nil then
+			local name = nameOrNamedObject and nameOrNamedObject.name or nameOrNamedObject or "unnamed";
+			print("'" .. name .. "' dbProvider returned nil");
+		end
+		
+		return db[key];
 	end
 	
 	function obj.Set(info, value)
 		local key = info.arg or info[#info];
-		dbProvider(key)[key] = value;
+		
+		local db = dbProvider(key);
+		
+		if db == nil then
+			local name = nameOrNamedObject and nameOrNamedObject.name or nameOrNamedObject or "unnamed";
+			print("'" .. name .. "' dbProvider returned nil");
+		end
+		
+		db[key] = value;
 		
 		if onValueUpdatedFunc ~= nil then
 			onValueUpdatedFunc(key, value);

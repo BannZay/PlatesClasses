@@ -73,7 +73,7 @@ function module:CreateStorage(category)
 end
 
 function module:BuildBlizzardOptions()
-	local dbConnection = Utils.DbConfig:New(function(key) return self.db end);
+	local dbConnection = Utils.DbConfig:New(function(key) return self.db end, nil, self);
 	local iterator = Utils.Iterator:New();
 	
 	local options = 
@@ -106,7 +106,7 @@ function module:BuildBlizzardOptions()
 	{
 		type = "execute",
 		name = "Reset Cache",
-		func = function() for categoryName, storage in pairs(self.cachingStorages) do storage:Reset(); end addon:UpdateAllNameplates() end,
+		func = function() for categoryName, storage in pairs(self.cachingStorages) do storage:Reset(); end addon:UpdateNameplates() end,
 		order = iterator(),
 		confirm = true
 	}

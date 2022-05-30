@@ -24,7 +24,7 @@ local allTotemIds =
     57722,   -- Totem of Wrath
 }
 
-local moduleName = "Totems"
+local moduleName = "PlatesClasses Totems"
 local AceAddon = LibStub("AceAddon-3.0");
 local LibLogger = LibStub("LibLogger-1.0");
 local LibNameplate = LibStub("LibNameplate-1.0");
@@ -33,6 +33,7 @@ local addon = AceAddon:GetAddon("PlatesClasses");
 local module = addon:NewModule(moduleName);
 local log = LibLogger:New(module);
 local Utils = addon.Utils;
+local platesClassesModule = addon:GetModule("PlatesClasses");
 
 function module:OnInitialize()
 	self.totems = 
@@ -48,45 +49,58 @@ function module:OnInitialize()
 		self.totems[key] = {name = name, spellId = spellId, icon = icon};
 	end
 
-	hooksecurefunc(addon, "UpdateFrameAppearence", function(this, ...) self:OnUpdateFrameAppearence(...) end);
 end
 
 function module:OnEnable()
-	addon:UpdateAllNameplates()
+	addon.RegisterCallback(self, "OnNameplateUpdating");
+	addon.RegisterCallback(self, "OnNameplateAppearenceUpdating");
+	addon:UpdateNameplates();
 end
 
 function module:OnDisable()
-	addon:UpdateAllNameplates()
+	addon:UpdateNameplates();
+	addon.UnregisterAllCallbacks(self);
 end
 
 function module:GetNameKey(name)
 	return string.sub(name, 0, 8);
 end
 
-function module:OnUpdateFrameAppearence(nameplateFrame, settings)
-	if self:IsEnabled() ~= true then
-		return;
+function module:GetTotemDisplayInfo(frame)
+	if frame.targetName ~= nil then
+		local key = self:GetNameKey(frame.targetName);
+		return self.totems[key];
 	end
-	
-	if settings == self.db.IconSettings then 
-		return; -- avoid cycle
+end
+
+function module:OnNameplateAppearenceUpdating(eventName, nameplate, fastUpdate)
+	local frame = Utils.NameplateIcon:GetOrCreateNameplateFrame(nameplate, self.db);
+	if self:GetTotemDisplayInfo(frame) ~= nil then
+		frame:UpdateAppearence(self.db.IconSettings);
 	end
+end
+
+function module:OnNameplateUpdating(eventName, nameplate, fastUpdate, name)
+	local frame = Utils.NameplateIcon:GetOrCreateNameplateFrame(nameplate, self.db);
 	
-	if nameplateFrame.targetName ~= nil then
-		local key = self:GetNameKey(nameplateFrame.targetName);
-		local info = self.totems[key];
-		
-		if info ~= nil then
-			if self.db.DisplayTotems[info.name] then
-				addon:UpdateFrameAppearence(nameplateFrame, self.db.IconSettings);
-				
-				nameplateFrame:Show();
-				SetPortraitToTexture(nameplateFrame.classTexture, info.icon);
-				nameplateFrame.classTexture:SetTexCoord(0.075, 0.925, 0.075, 0.925);
-				nameplateFrame.classBorderTexture:Hide();
+	if self:IsEnabled() then
+		frame.targetName = name
+
+		frame:SetCustomAppearance(function(this)
+			local info = self:GetTotemDisplayInfo(frame);
+			if info ~= nil then
+				if self.db.DisplayTotems[info.name] then
+					SetPortraitToTexture(frame.classTexture, info.icon);
+					frame.classTexture:SetTexCoord(0.075, 0.925, 0.075, 0.925);
+					frame.classBorderTexture:Hide();
+					this:Show()
+				end
 			end
+		end)
+	else
+		if frame ~= nil and module:GetTotemDisplayInfo(frame) ~= nil then
+			frame:Clear();
 		end
-		
 	end
 end
 
@@ -100,7 +114,8 @@ function module:GetDbMigrations()
 			["Tremor Totem"] = true,
 			["Cleansing Totem"] = true,
 		};
-		db.IconSettings = addon:GetDefaultNameplateIconSettings();
+		
+		Utils.NameplateIcon:AddVariables(db);
 	end
 	
 	return modules;
@@ -131,14 +146,14 @@ function module:AddTotemsListOptions(options, dbConnection, iterator)
 			image = totemInfo.icon,
 			desc = "",
 			get = dbConnection.Get,
-			set = dbConnection:BuildSetter(function(newState) addon:UpdateAllNameplates(); end),
+			set = dbConnection:BuildSetter(function(newState) addon:UpdateNameplates(); end),
 			order = iterator()
 		}
 	end
 end
 
 function module:BuildBlizzardOptions()
-	local dbConnection = Utils.DbConfig:New(function(key) return self.db end);
+	local dbConnection = Utils.DbConfig:New(function(key) return self.db end, nil, self);
 	local iterator = Utils.Iterator:New();
 	
 	local options = 
@@ -177,8 +192,9 @@ function module:BuildBlizzardOptions()
 		args = {},
 		order = iterator()
 	}
-	local iconSettingsDbConnection = Utils.DbConfig:New(function(key) return self.db.IconSettings end, function(key, value) addon:UpdateAppearence() end);
-	addon:AddBlizzardOptionsForNameplateIcon(iconSettingsOptions, iconSettingsDbConnection, iterator);
+	local iconSettingsDbConnection = Utils.DbConfig:New(function(key) return self.db.IconSettings end,
+		function(key, value) addon:UpdateAppearence() end, self.name .. "_iconSettingsDbConnection");
+	Utils.NameplateIcon:AddBlizzardOptions(iconSettingsOptions, iconSettingsDbConnection, iterator);
 	options.args.IconSettingsOptions = iconSettingsOptions
 
 	local totemListOptions =
@@ -188,7 +204,7 @@ function module:BuildBlizzardOptions()
 		args = {},
 		order = iterator()
 	}
-	local totemsDbConnection = Utils.DbConfig:New(function(key) return self.db.DisplayTotems end);
+	local totemsDbConnection = Utils.DbConfig:New(function(key) return self.db.DisplayTotems end, nil, self.name .. "_totemsDbConnection");
 	self:AddTotemsListOptions(totemListOptions, totemsDbConnection, iterator);
 	options.args.TotemListOptions = totemListOptions;
 	
