@@ -82,6 +82,7 @@ end
 
 function module:OnNameplateUpdating(eventName, nameplate, fastUpdate, name)
 	local frame = Utils.NameplateIcon:GetOrCreateNameplateFrame(nameplate, self.db);
+	if name == "UNKNOWN" then name = nameplate.name end
 	
 	if self:IsEnabled() then
 		frame.targetName = name
@@ -94,6 +95,15 @@ function module:OnNameplateUpdating(eventName, nameplate, fastUpdate, name)
 					frame.classTexture:SetTexCoord(0.075, 0.925, 0.075, 0.925);
 					frame.classBorderTexture:Hide();
 					this:Show()
+				end
+				
+				local nameRegion = LibNameplate:GetNameRegion(nameplate);
+				local nameplateNameText = nameRegion:GetText();
+				if self.db.HideNames and nameplateNameText ~= nil then
+					LibNameplate:GetNameRegion(nameplate):SetText(nil);
+					nameplate.name = name;
+				elseif not self.db.HideNames then
+					LibNameplate:GetNameRegion(nameplate):SetText(name);
 				end
 			end
 		end)
@@ -109,6 +119,7 @@ function module:GetDbMigrations()
 	
 	modules[1] = function(db)
 		db.Enabled = true;
+		db.HideNames = false;
 		db.DisplayTotems = 
 		{
 			["Tremor Totem"] = true,
@@ -180,6 +191,13 @@ function module:BuildBlizzardOptions()
 		name = "Enabled",
 		desc = "",
 		set = dbConnection:BuildSetter(function(newState) if newState then module:Enable() else module:Disable() end end),
+		order = iterator()
+	}
+
+	generalSettingsOptions.args["HideNames"] = 
+	{
+		type = "toggle",
+		name = "Hide Names",
 		order = iterator()
 	}
 	

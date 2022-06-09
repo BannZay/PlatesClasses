@@ -36,7 +36,7 @@ function addon:OnInitialize()
 			Version = 0
 		}
 	};
-	local db = AceDb:New("DB", dbDefaults, true);
+	local db = AceDb:New("PlatesClassesDB", dbDefaults, true);
 	db.RegisterCallback(self, "OnProfileChanged", "OnProfileChanged");
 	db.RegisterCallback(self, "OnProfileCopied", "OnProfileChanged");
 	db.RegisterCallback(self, "OnProfileReset", "OnProfileChanged");

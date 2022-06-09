@@ -61,7 +61,7 @@ function module:OnNameplateUpdating(eventName, nameplate, fastUpdate)
 		else
 			local playerClasses = addon:GetStorage(self.name);
 			
-			local name = LibNameplate:GetName(nameplate);
+			local name = LibNameplate:GetName(nameplate) or nameplate.name;
 			local metadata = self:GetMetadata(nameplate, nameplate.unitId);
 			
 			if metadata.class == nil then
