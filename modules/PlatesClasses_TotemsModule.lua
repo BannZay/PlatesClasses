@@ -58,7 +58,9 @@ function module:OnEnable()
 end
 
 function module:OnDisable()
+	self.Disabling = true;
 	addon:UpdateNameplates();
+	self.Disabling = false;
 	addon.UnregisterAllCallbacks(self);
 end
 
@@ -88,22 +90,31 @@ function module:OnNameplateUpdating(eventName, nameplate, fastUpdate, name)
 		frame.targetName = name
 
 		frame:SetCustomAppearance(function(this)
-			local info = self:GetTotemDisplayInfo(frame);
-			if info ~= nil then
-				if self.db.DisplayTotems[info.name] then
-					SetPortraitToTexture(frame.classTexture, info.icon);
-					frame.classTexture:SetTexCoord(0.075, 0.925, 0.075, 0.925);
-					frame.classBorderTexture:Hide();
-					this:Show()
+			if self.Disabling then
+				if nameplate.name ~= nil then
+					local nameplateNameRegion = LibNameplate:GetNameRegion(nameplate)
+					if nameplateNameRegion:GetText() == nil then
+						nameplateNameRegion:SetText(nameplate.name)
+					end
 				end
+			else
+				local info = self:GetTotemDisplayInfo(frame);
+				if info ~= nil then
+					if self.db.DisplayTotems[info.name] then
+						SetPortraitToTexture(frame.classTexture, info.icon);
+						frame.classTexture:SetTexCoord(0.075, 0.925, 0.075, 0.925);
+						frame.classBorderTexture:Hide();
+						this:Show()
+					end
 				
-				local nameRegion = LibNameplate:GetNameRegion(nameplate);
-				local nameplateNameText = nameRegion:GetText();
-				if self.db.HideNames and nameplateNameText ~= nil then
-					LibNameplate:GetNameRegion(nameplate):SetText(nil);
-					nameplate.name = name;
-				elseif not self.db.HideNames then
-					LibNameplate:GetNameRegion(nameplate):SetText(name);
+					local nameRegion = LibNameplate:GetNameRegion(nameplate);
+					local nameplateNameText = nameRegion:GetText();
+					if self.db.HideNames and nameplateNameText ~= nil then
+						LibNameplate:GetNameRegion(nameplate):SetText(nil);
+						nameplate.name = name;
+					elseif not self.db.HideNames then
+						LibNameplate:GetNameRegion(nameplate):SetText(name);
+					end
 				end
 			end
 		end)
