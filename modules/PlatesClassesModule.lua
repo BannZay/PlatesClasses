@@ -54,11 +54,7 @@ function module:OnNameplateUpdating(eventName, nameplate, fastUpdate)
 	local frame = Utils.NameplateIcon:GetNameplateFrame(nameplate)
 	
 	if self:IsEnabled() then
-		if fastUpdate then
-			if frame ~= nil then
-				self:UpdateBorderColor(frame);
-			end
-		else
+		if not fastUpdate then
 			local playerClasses = addon:GetStorage(self);
 			
 			local name = LibNameplate:GetName(nameplate) or nameplate.name;
@@ -77,6 +73,10 @@ function module:OnNameplateUpdating(eventName, nameplate, fastUpdate)
 				frame = frame or Utils.NameplateIcon:GetOrCreateNameplateFrame(nameplate, self.db);
 				frame:SetMetadata(metadata, name);
 			end
+		end
+		
+		if frame ~= nil then
+			self:UpdateBorderColor(frame);
 		end
 	else
 		if frame ~= nil and frame.isPlayer then
