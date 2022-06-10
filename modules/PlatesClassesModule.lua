@@ -59,14 +59,14 @@ function module:OnNameplateUpdating(eventName, nameplate, fastUpdate)
 				self:UpdateBorderColor(frame);
 			end
 		else
-			local playerClasses = addon:GetStorage(self.name);
+			local playerClasses = addon:GetStorage(self);
 			
 			local name = LibNameplate:GetName(nameplate) or nameplate.name;
 			local metadata = self:GetMetadata(nameplate, nameplate.unitId);
 			
 			if metadata.class == nil then
 				metadata.class = playerClasses:Get(name);
-				log:Log(70, "Storage returned", metadata.class, "for name ", name);
+				log:Log(70, "Storage " .. tostring(self) .. " returned '", metadata.class, "' for name ", name);
 			else
 				playerClasses:Set(name, metadata.class);
 			end
@@ -158,7 +158,7 @@ function module:ClassToIndex(unifiedClass)
 end
 
 function module:AddUnit(unitID)
-	local storage = addon:GetStorage(module.name);
+	local storage = addon:GetStorage(self);
 	local name = UnitName(unitID);
 	log:Log(40, "Adding unit '",  unitID ,"' with name '", name ,"'.")
 	

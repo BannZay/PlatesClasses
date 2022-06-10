@@ -7,6 +7,7 @@ local AceConfigDialog = LibStub("AceConfigDialog-3.0");
 local addon = AceAddon:GetAddon("PlatesClasses");
 local log = LibLogger:New(addon);
 local module = addon:NewModule("Cache");
+module.Version = 2;
 module.cachingStorages = {}
 
 local Utils = addon.Utils;
@@ -14,10 +15,10 @@ local Utils = addon.Utils;
 local oldStorages = {}
 
 function module:OnInitialize()
-	self.cachingStorages = 
-	{
-		PlayerClasses = self:CreateStorage("PlayerClasses")
-	}
+	self.cachingStorages = {}
+
+	local platesClassesModule = addon:GetModule("PlatesClasses")
+	self.cachingStorages[tostring(platesClassesModule)] = self:CreateStorage(platesClassesModule);
 
 	self.oldStorages = {}
 end
@@ -38,6 +39,12 @@ function module:GetDbMigrations()
 			PlayerClasses = {}
 		}
 	end
+	
+	migrations[2] = function(db, dbRoot)
+		local platesClassesModule = addon:GetModule("PlatesClasses")
+		dbRoot.global.Cache[tostring(platesClassesModule)] = dbRoot.global.Cache.PlayerClasses
+		dbRoot.global.Cache.PlayerClasses = nil
+	end
 
 	return migrations;
 end
@@ -45,7 +52,7 @@ end
 function module:OnEnable()
 	for categoryName, storage in pairs(self.cachingStorages) do
 		self.oldStorages[categoryName] = addon:GetStorage(categoryName);
-		addon:SetStorage("PlayerClasses", storage);
+		addon:SetStorage(categoryName, storage);
 	end
 end
 
@@ -56,9 +63,11 @@ function module:OnDisable()
 end
 
 function module:CreateStorage(category)
-	if category == nil or type(category) ~= "string" then
+	if category == nil then
 		error()
 	end
+	
+	category = tostring(category)
 	
 	local get = function(storage, key) return self.Cache[category][key] end
 	local set = function(storage, key, value) self.Cache[category][key] = value end

@@ -140,13 +140,11 @@ function addon:InitializeDb(module, moduleDb, targetVersion)
 			local migrations = module:GetDbMigrations();
 			
 			for migrationVersion, migration in pairs(migrations) do
-				if migrationVersion > targetVersion then
-					break;
-				end
-				
+				local oldDbVersion = moduleDb.Version;
 				if migrationVersion > moduleDb.Version then
-					moduleDb.Version = migrationVersion;
 					migration(moduleDb, self.dbRoot); -- upgrade db to the next version
+					moduleDb.Version = migrationVersion;
+					log:Log(10, "Upgraded module '", tostring(module), "'db version from", oldDbVersion, "to", moduleDb.Version);
 				end
 			end
 		end
@@ -246,10 +244,10 @@ function addon:SetStorage(categoryName, storage)
 end
 
 function addon:GetStorage(categoryName)
-	return self.storages[categoryName];
+	return self.storages[tostring(categoryName)];
 end
 
-function addon:OnProfileChanged(event, database)
+function addon:OnProfileChanged(_, database)
 	self.dbRoot = database;
 	self:InitializeDb(self, database.profile, DBVERSION);
 	
@@ -260,7 +258,7 @@ function addon:OnProfileChanged(event, database)
 		
 		local subModuleDb = self.db.modules[subModule.name]
 		
-		self:InitializeDb(subModule, subModuleDb, self.db.Version);
+		self:InitializeDb(subModule, subModuleDb, subModule.Version or self.db.Version);
 		subModule:SetEnabledState(subModuleDb.Enabled);
 	end
 	
