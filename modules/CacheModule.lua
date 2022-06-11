@@ -41,9 +41,17 @@ function module:GetDbMigrations()
 	end
 	
 	migrations[2] = function(db, dbRoot)
+		local cache = dbRoot.global.Cache;
 		local platesClassesModule = addon:GetModule("PlatesClasses")
-		dbRoot.global.Cache[tostring(platesClassesModule)] = dbRoot.global.Cache.PlayerClasses
-		dbRoot.global.Cache.PlayerClasses = nil
+		local categoryName = tostring(platesClassesModule);
+		-- change category name
+		cache[categoryName] = cache.PlayerClasses
+		cache.PlayerClasses = nil
+		-- use PlayerClassConverter
+		for i,k in pairs(cache[categoryName]) do
+			print(i, k)
+			cache[categoryName][i] = self.PlayerClassConverter:ToConfig(k)
+		end
 	end
 
 	return migrations;
@@ -69,8 +77,8 @@ function module:CreateStorage(category)
 	
 	category = tostring(category)
 	
-	local get = function(storage, key) return self.Cache[category][key] end
-	local set = function(storage, key, value) self.Cache[category][key] = value end
+	local get = function(storage, key) return self.PlayerClassConverter:ToOriginal(self.Cache[category][key]) end
+	local set = function(storage, key, value) self.Cache[category][key] = self.PlayerClassConverter:ToConfig(value) end
 	local reset = function(storage, key) self.Cache[category] = {} end
 	
 	return {

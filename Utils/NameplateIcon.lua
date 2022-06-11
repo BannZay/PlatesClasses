@@ -37,7 +37,7 @@ function util:ApplySettingsToFrame(frame, db)
 end
 
 function util:GetOrCreateNameplateFrame(nameplate, db)
-	if nameplate.nameplateIcon == nil and not doNotInitialize then
+	if nameplate.nameplateIcon == nil then
 		local nameplateIcon = CreateFrame("Frame", nil, nameplate);
 		
 		nameplateIcon.Clear = function(this)
@@ -110,8 +110,6 @@ function util:GetOrCreateNameplateFrame(nameplate, db)
 		textureBorder:SetAllPoints()
 		nameplateIcon.classBorderTexture = textureBorder;
 		nameplate.nameplateIcon = nameplateIcon;
-	else
-		
 	end
 	
 	return nameplate.nameplateIcon;
