@@ -5,6 +5,7 @@ local LibEvents = LibStub("LibEvents-1.0");
 local LibNameplate = LibStub("LibNameplate-1.0");
 
 local addon = AceAddon:GetAddon("PlatesClasses");
+local displayName = "Players";
 local module = addon:NewModule(moduleName);
 local log = LibLogger:New(module);
 local Utils = addon.Utils;
@@ -24,6 +25,7 @@ function module:OnEnable()
 	
 	events:Enable();
 	events:PARTY_MEMBERS_CHANGED();
+	addon:UpdateNameplates();
 end
 
 function module:OnDisable()
@@ -57,7 +59,7 @@ function module:OnNameplateUpdating(eventName, nameplate, fastUpdate)
 		if not fastUpdate then
 			local playerClasses = addon:GetStorage(self);
 			
-			local name = LibNameplate:GetName(nameplate) or nameplate.name;
+			local name = LibNameplate:GetName(nameplate);
 			local metadata = self:GetMetadata(nameplate, nameplate.unitId);
 			
 			if metadata.class == nil then
@@ -73,6 +75,7 @@ function module:OnNameplateUpdating(eventName, nameplate, fastUpdate)
 				frame = frame or Utils.NameplateIcon:GetOrCreateNameplateFrame(nameplate, self.db);
 				frame:SetMetadata(metadata, name);
 			end
+			log:Log(99, "Updated nameplate '",name, "'")
 		end
 		
 		if frame ~= nil then
@@ -192,58 +195,20 @@ function events:PARTY_MEMBERS_CHANGED()
 end
 
 function module:BuildBlizzardOptions()
-	local dbConnection = Utils.DbConfig:New(function(key) return self.db end, nil, self);
+	local dbConnection = Utils.DbConfig:New(function(key) return self.db end, function(newState) addon:UpdateAppearence() end, self);
 	local iterator = Utils.Iterator:New();
+	local options = {}
 	
-	local options = 
+	options["IconSettingsOptions"] = 
 	{
 		type = "group",
-		name = module.moduleName,
-		get = dbConnection.Get,
-		set = dbConnection:BuildSetter( function(newState) addon:UpdateAppearence() end),
-		childGroups = "tab",
-		args = {}
-	}
-	
-	local generalSettingsOptions = 
-	{
-		type = "group",
-		name = "General",
-		args = {},
-		order = iterator()
-	}
-	
-	generalSettingsOptions.args["Enabled"] = 
-	{
-		type = "toggle",
-		name = "Enabled",
-		desc = "",
-		set = dbConnection:BuildSetter(function(newState) if newState then module:Enable() else module:Disable() end end),
-		order = iterator()
-	}
-	
-	generalSettingsOptions.args["Enabled"] = 
-	{
-		type = "toggle",
-		name = "Enabled",
-		desc = "",
-		set = dbConnection:BuildSetter(function(newState) addon:UpdateNameplates() if newState then module:Enable() else module:Disable() end end),
-		order = iterator()
-	}
-	
-	options.args.GeneralSettingsOptions = generalSettingsOptions;
-	
-	local iconSettingsOptions = 
-	{
-		type = "group",
-		name = "Icon Settings",
+		name = "Icon settings",
 		args = {},
 		order = iterator()
 	}
 	local iconSettingsDbConnection = Utils.DbConfig:New(function(key) return self.db.IconSettings end, function(key, value) addon:UpdateAppearence() end, self.name .. "_iconSettingsDbConnection");
-	Utils.NameplateIcon:AddBlizzardOptions(iconSettingsOptions, iconSettingsDbConnection, iterator);
-	options.args.IconSettingsOptions = iconSettingsOptions
+	Utils.NameplateIcon:AddBlizzardOptions(options["IconSettingsOptions"], iconSettingsDbConnection, iterator);
 	
-	return options
+	return options, displayName
 end
 

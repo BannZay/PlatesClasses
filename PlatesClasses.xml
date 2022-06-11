@@ -5,9 +5,12 @@
     <Script file="Utils\DbConfig.lua"/>
     <Script file="Utils\Iterator.lua"/>
     <Script file="Utils\NameplateIcon.lua"/>
+    <Script file="Utils\Helpers.lua"/>
+    <Script file="Utils\NameRecognizer.lua"/>
     
     <Script file="modules\CacheModule.lua"/>
     <Script file="modules\CacheModule_PlayerClassesConverter.lua"/>
     <Script file="modules\PlatesClassesModule.lua"/>
     <Script file="modules\PlatesClasses_TotemsModule.lua"/>
+    <Script file="modules\PlateStylerModule.lua"/>
 </Ui>

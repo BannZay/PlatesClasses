@@ -14,7 +14,6 @@ function DbConfig:New(dbProvider, onValueUpdatedFunc, nameOrNamedObject)
 		
 		if db == nil then
 			local name = nameOrNamedObject and nameOrNamedObject.name or nameOrNamedObject or "unnamed";
-			print("'" .. name .. "' dbProvider returned nil");
 		end
 		
 		return db[key];
@@ -27,7 +26,6 @@ function DbConfig:New(dbProvider, onValueUpdatedFunc, nameOrNamedObject)
 		
 		if db == nil then
 			local name = nameOrNamedObject and nameOrNamedObject.name or nameOrNamedObject or "unnamed";
-			print("'" .. name .. "' dbProvider returned nil");
 		end
 		
 		db[key] = value;
@@ -46,6 +44,8 @@ function DbConfig:New(dbProvider, onValueUpdatedFunc, nameOrNamedObject)
 			end
 		end
 	end
+	
+	setmetatable(obj, {__call = function(this, key) return this.Get({arg = key}) end})
 	
 	return obj;
 end

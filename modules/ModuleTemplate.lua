@@ -31,37 +31,11 @@ function module:GetDbMigrations()
 end
 
 function module:BuildBlizzardOptions()
-	local dbConnection = Utils.DbConfig:New(function(key) return self.db end, nil, self);
+	local dbConnection = Utils.DbConfig:New(function(key) return self.db end, function(newState) addon:UpdateAppearence() end, self);
 	local iterator = Utils.Iterator:New();
+	local options = {}
 	
-	local options = 
-	{
-		type = "group",
-		name = module.moduleName,
-		get = dbConnection.Get,
-		set = dbConnection:BuildSetter( function(newState) addon:UpdateAppearence() end),
-		childGroups = "tab",
-		args = {}
-	}
-	
-	local generalSettingsOptions = 
-	{
-		type = "group",
-		name = "General",
-		args = {},
-		order = iterator()
-	}
-	
-	generalSettingsOptions.args["Enabled"] = 
-	{
-		type = "toggle",
-		name = "Enabled",
-		desc = "",
-		set = dbConnection:BuildSetter(function(newState) if newState then module:Enable() else module:Disable() end end),
-		order = iterator()
-	}
-	
-	generalSettingsOptions.args["Button"] = 
+	local button =  
 	{
 		type = "execute",
 		name = "Red button",
@@ -70,7 +44,5 @@ function module:BuildBlizzardOptions()
 		order = iterator()
 	}
 	
-	options.args.GeneralSettingsOptions = generalSettingsOptions;
-	
-	return options
+	return options {Button = button}
 end

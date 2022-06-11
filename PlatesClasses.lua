@@ -66,13 +66,44 @@ function addon:OnModulesInitialized()
 	
 	for name, subModule in self:IterateModules() do
 		if subModule.BuildBlizzardOptions ~= nil then
-			local options = subModule:BuildBlizzardOptions()
-			if options == nil then
+			local groups, displayName = subModule:BuildBlizzardOptions()
+			if groups == nil then
 				error("Module " .. name .. " returned nil options.");
 			end
+			
+			if displayName == nil then
+				displayName = subModule.moduleName;
+			end
+			
+			local dbConnection = Utils.DbConfig:New(function(key) return subModule.db end, nil, self);
+			local options = 
+			{
+				type = "group",
+				name = displayName,
+				childGroups = "tab",
+				disabled = function(info) if #info > 1 then return not dbConnection("Enabled") end end,
+				args = 
+				{
+					Enabled = 
+					{
+						type = "toggle",
+						name = "Enabled",
+						desc = "",
+						get = dbConnection.Get,
+						set = dbConnection:BuildSetter(function(newState) if newState then subModule:Enable() else subModule:Disable() end end),
+						order = 0
+					}
+				}
+			}
+		
+			
+			for groupName, group in pairs(groups) do 
+				options.args[groupName] = group
+			end
+			
 			local key = self.name .. subModule.moduleName;
 			AceConfig:RegisterOptionsTable(key, options);
-			AceConfigDialog:AddToBlizOptions(key, subModule.moduleName, self.name);
+			AceConfigDialog:AddToBlizOptions(key, displayName or subModule.moduleName, self.name);
 		end
 	end
 	
@@ -157,6 +188,7 @@ end
 
 
 function addon:OnNameplateCreated(nameplate)
+	addon.callbacks:Fire("OnNameplateCreated", nameplate);
 	self:UpdateNameplate(nameplate)
 end
 
@@ -197,7 +229,7 @@ end
 
 function addon:UpdateNameplates(fastUpdate)
 	local nameplatesList = {LibNameplate:GetAllNameplates()};
-	log:Log(30, "Updating",  nameplatesList[1], "nameplate(s). FastUpdate =", fastUpdate or "false");
+	log:Log(30, "Updating nameplates state. Count =",  nameplatesList[1], ", FastUpdate =", fastUpdate or "false");
 	for i = 2, nameplatesList[1]+1 do
 		local nameplate = nameplatesList[i];
 		self:UpdateNameplate(nameplate, fastUpdate);
@@ -206,7 +238,7 @@ end
 
 function addon:UpdateAppearence(fastUpdate)
 	local nameplatesList = {LibNameplate:GetAllNameplates()};
-	log:Log(30, "Updating",  nameplatesList[1], "nameplate(s) appearence. FastUpdate =", fastUpdate or "false");
+	log:Log(30, "Updating appearence. Count  =",  nameplatesList[1], ", FastUpdate =", fastUpdate or "false");
 	for i = 2, nameplatesList[1]+1 do
 		local nameplate = nameplatesList[i];
 		self:UpdateNameplateAppearence(nameplate, fastUpdate);

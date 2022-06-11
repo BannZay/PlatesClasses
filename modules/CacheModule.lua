@@ -49,7 +49,6 @@ function module:GetDbMigrations()
 		cache.PlayerClasses = nil
 		-- use PlayerClassConverter
 		for i,k in pairs(cache[categoryName]) do
-			print(i, k)
 			cache[categoryName][i] = self.PlayerClassConverter:ToConfig(k)
 		end
 	end
@@ -93,33 +92,9 @@ function module:BuildBlizzardOptions()
 	local dbConnection = Utils.DbConfig:New(function(key) return self.db end, nil, self);
 	local iterator = Utils.Iterator:New();
 	
-	local options = 
-	{
-		type = "group",
-		name = module.moduleName,
-		get = dbConnection.Get,
-		set = dbConnection.Set,
-		args = {}
-	}
+	local options = {}
 	
-	options.args["Description"] = 
-	{
-		type = "description",
-		name = "Caches classes of players to accounts config.",
-		fontSize = "medium",
-		order = iterator()
-	}
-	
-	options.args["Enabled"] = 
-	{
-		type = "toggle",
-		name = "Enabled",
-		desc = "",
-		set = dbConnection:BuildSetter(function(newState) if newState then module:Enable() else module:Disable() end end),
-		order = iterator()
-	}
-	
-	options.args["Reset"] = 
+	options["Reset"] = 
 	{
 		type = "execute",
 		name = "Reset Cache",

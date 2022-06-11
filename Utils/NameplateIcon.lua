@@ -6,10 +6,6 @@ local addon = AceAddon:GetAddon("PlatesClasses");
 local util = {}
 addon.Utils[NAME] = util;
 
-function util:Hello()
-	print("hello!");
-end
-
 function util:AddVariables(db)
 	db.IconSettings = db.IconSettings or self:GetDefaultNameplateIconSettings();
 end
