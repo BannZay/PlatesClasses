@@ -1,7 +1,6 @@
 local ADDON_NAME = "PlatesClasses";
 local ADDON_PATH = "Interface\\Addons\\" .. ADDON_NAME;
 local LOGLEVEL = -1;
-local DBVERSION = 1;
 
 local AceAddon = LibStub("AceAddon-3.0");
 local AceConfig = LibStub("AceConfig-3.0");
@@ -30,7 +29,6 @@ function addon:OnInitialize()
 	{
 		profile = 
 		{
-			modules = {},
 			Enabled = true,
 			UpdateFrequency = 1;
 			Version = 0
@@ -41,6 +39,8 @@ function addon:OnInitialize()
 	db.RegisterCallback(self, "OnProfileCopied", "OnProfileChanged");
 	db.RegisterCallback(self, "OnProfileReset", "OnProfileChanged");
 	self:OnProfileChanged("self-call", db)
+	
+	log:SetMaximumLogLevel(self.dbRoot.global.LogLevel);
 	
 	self.storages = { };
 	
@@ -60,8 +60,26 @@ function addon:OnInitialize()
 	self:SetEnabledState(self.db.Enabled);
 end
 
+function addon:BuildBlizzardOptions()
+	local dbConnection = Utils.DbConfig:New(function(key) return self.dbRoot.global end, nil, self);
+	local options = {}
+	
+	options["LogLevel"] = 
+	{
+		type = "range",
+		name = "Log level",
+		step = 1,
+		min = -1,
+		max = 100,
+		get = dbConnection.Get,
+		set = dbConnection:BuildSetter(function(value) log:SetMaximumLogLevel(value) end)
+	}
+	
+	return options
+end
+
 function addon:OnModulesInitialized()
-	AceConfig:RegisterOptionsTable(self.name, {type= "group", name = self.name, args = {}});
+	AceConfig:RegisterOptionsTable(self.name, {type= "group", name = self.name, args = self:BuildBlizzardOptions() });
 	AceConfigDialog:AddToBlizOptions(self.name, self.name);
 	
 	for name, subModule in self:IterateModules() do
@@ -95,8 +113,7 @@ function addon:OnModulesInitialized()
 					}
 				}
 			}
-		
-			
+
 			for groupName, group in pairs(groups) do 
 				options.args[groupName] = group
 			end
@@ -144,45 +161,63 @@ function addon:GetDbMigrations()
 		db.modules = {}
 	end
 	
+	migrations[2] = function(db, dbRoot)
+		dbRoot.global.LogLevel = -1;
+	end
+	
 	return migrations;
 end
 
-function addon:InitializeDb(module, moduleDb, targetVersion)
-	if moduleDb == nil then
-		moduleDb = module.db;
+function addon:InitializeDb(module, moduleDb)
+	if moduleDb ~= nil then
+		module.db = moduleDb;
+	end
+	
+	if module.db.Version == nil then
+		module.db.Version = 0;
+	end
+	
+	if type(module.db.Version) ~= "number" then
+		error("module '" .. module.name .. "' has invalid database version");
+	end
+	
+	if module.db.modules == nil then
+		module.db.modules = {}
+	end
+	
+	if module.GetDbMigrations ~= nil then
+		local migrations = module:GetDbMigrations();
 		
-		if moduleDb == nil then
-			error("db was nil");
-		end
-	end
-	
-	module.db = moduleDb;
-
-	if moduleDb.Version == nil then
-		moduleDb.Version = 0;
-	end
-	
-	if moduleDb.Version ~= targetVersion then
-		if type(moduleDb.Version) ~= "number" then
-			error("module '" .. module.name .. "' has invalid database version");
-		end
-	
-		if module.GetDbMigrations ~= nil then
-			local migrations = module:GetDbMigrations();
-			
-			for migrationVersion, migration in pairs(migrations) do
-				local oldDbVersion = moduleDb.Version;
-				if migrationVersion > moduleDb.Version then
-					migration(moduleDb, self.dbRoot); -- upgrade db to the next version
-					moduleDb.Version = migrationVersion;
-					log:Log(10, "Upgraded module '", tostring(module), "'db version from", oldDbVersion, "to", moduleDb.Version);
-				end
+		for migrationVersion, migration in pairs(migrations) do
+			local oldDbVersion = module.db.Version;
+			if migrationVersion > module.db.Version then
+				migration(module.db, self.dbRoot); -- upgrade db to the next version
+				module.db.Version = migrationVersion;
+				log:Log(10, "Upgraded module '", tostring(module), "'db version from", oldDbVersion, "to", moduleDb.Version);
 			end
 		end
 	end
 	
+	for name, subModule in module:IterateModules() do
+		if module.db.modules[subModule.name] == nil then
+			module.db.modules[subModule.name] = {};
+		end
+		
+		local subModuleDb = module.db.modules[subModule.name]
+		
+		addon:InitializeDb(subModule, subModuleDb);
+	end
+	
+	if  module.db.Enabled == nil then
+		module.db.Enabled = true;
+	else
+	
+	end
+	
+	module:SetEnabledState(module.db.Enabled);
+	
 	if module.OnDbInitialized ~= nil then
-		module:OnDbInitialized(moduleDb, self.dbRoot);
+		module:OnDbInitialized(module.db, self.dbRoot);
 	end
 end
 
@@ -218,30 +253,48 @@ function addon:UpdateNameplate(nameplateOrName, fastUpdate)
 	if nameplateOrName ~= nil then
 		local name = LibNameplate:GetName(nameplateOrName);
 		addon.callbacks:Fire("OnNameplateUpdating", nameplateOrName, fastUpdate, name);
-		self:UpdateAppearence(nameplate, fastUpdate)
+		self:UpdateNameplateAppearence(nameplateOrName, fastUpdate)
 	end
 end
 
 function addon:UpdateNameplateAppearence(nameplate, fastUpdate)
 	local name = LibNameplate:GetName(nameplate);
+	log(60, "Updating nameplate appearence for '", name, "'")
 	addon.callbacks:Fire("OnNameplateAppearenceUpdating", nameplate, fastUpdate, name);
 end
 
 function addon:UpdateNameplates(fastUpdate)
-	local nameplatesList = {LibNameplate:GetAllNameplates()};
-	log:Log(30, "Updating nameplates state. Count =",  nameplatesList[1], ", FastUpdate =", fastUpdate or "false");
-	for i = 2, nameplatesList[1]+1 do
+	local nameplatesList = self:GetVisibleNameplates();
+	log:Log(30, "Updating nameplates state. Count =",  #nameplatesList, ", FastUpdate =", fastUpdate or "false");
+	for i = 1, #nameplatesList do
 		local nameplate = nameplatesList[i];
-		self:UpdateNameplate(nameplate, fastUpdate);
+		if nameplate:IsVisible() then
+			self:UpdateNameplate(nameplate, fastUpdate);
+		end
 	end
 end
 
-function addon:UpdateAppearence(fastUpdate)
+function addon:GetVisibleNameplates()
 	local nameplatesList = {LibNameplate:GetAllNameplates()};
-	log:Log(30, "Updating appearence. Count  =",  nameplatesList[1], ", FastUpdate =", fastUpdate or "false");
+	local result = {}
 	for i = 2, nameplatesList[1]+1 do
 		local nameplate = nameplatesList[i];
-		self:UpdateNameplateAppearence(nameplate, fastUpdate);
+		if nameplate:IsVisible() then
+			table.insert(result, nameplate);
+		end
+	end
+	
+	return result;
+end
+
+function addon:UpdateAppearence(fastUpdate)
+	local nameplatesList = self:GetVisibleNameplates()
+	log:Log(30, "Updating appearence. Count  =",  #nameplatesList, ", FastUpdate =", fastUpdate or "false");
+	for i = 1, #nameplatesList do
+		local nameplate = nameplatesList[i];
+		if nameplate:IsVisible() then
+			self:UpdateNameplateAppearence(nameplate, fastUpdate);
+		end
 	end
 end
 
@@ -281,18 +334,7 @@ end
 
 function addon:OnProfileChanged(_, database)
 	self.dbRoot = database;
-	self:InitializeDb(self, database.profile, DBVERSION);
-	
-	for name, subModule in self:IterateModules() do
-		if self.db.modules[subModule.name] == nil then
-			self.db.modules[subModule.name] = {};
-		end
-		
-		local subModuleDb = self.db.modules[subModule.name]
-		
-		self:InitializeDb(subModule, subModuleDb, subModule.Version or self.db.Version);
-		subModule:SetEnabledState(subModuleDb.Enabled);
-	end
+	self:InitializeDb(self, database.profile);
 	
 	if self.Initialized then
 		self:Disable();
@@ -301,5 +343,4 @@ function addon:OnProfileChanged(_, database)
 		end
 		self:UpdateAppearence();
 	end
-	
 end

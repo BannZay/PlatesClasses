@@ -12,5 +12,5 @@
     <Script file="modules\CacheModule_PlayerClassesConverter.lua"/>
     <Script file="modules\PlatesClassesModule.lua"/>
     <Script file="modules\PlatesClasses_TotemsModule.lua"/>
-    <Script file="modules\PlateStylerModule.lua"/>
+    <Include file="modules\PlatesStyler\PlatesStylerModule.xml"/>
 </Ui>
