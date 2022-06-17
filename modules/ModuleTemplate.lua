@@ -5,7 +5,7 @@ local LibLogger = LibStub("LibLogger-1.0");
 
 local addon = AceAddon:GetAddon("PlatesClasses");
 local module = addon:NewModule(moduleName);
-local log = LibLogger:New(module);
+local log = LibLogger:New(addon);
 local Utils = addon.Utils;
 
 function module:OnInitialize()

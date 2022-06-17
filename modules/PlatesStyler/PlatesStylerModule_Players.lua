@@ -6,7 +6,7 @@ local LibNameplate = LibStub("LibNameplate-1.0");
 local addon =  AceAddon:GetAddon("PlatesClasses")
 local parent = addon:GetModule("Plate Styler");
 local module = parent:NewModule(moduleName);
-local log = LibLogger:New(module);
+local log = LibLogger:New(addon);
 local Utils = addon.Utils;
 
 local provider = function(nameplate) if module.db.Enabled and LibNameplate:GetType(nameplate) == "PLAYER" then return module.db end end

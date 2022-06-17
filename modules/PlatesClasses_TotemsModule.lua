@@ -8,7 +8,7 @@ local LibNameplate = LibStub("LibNameplate-1.0");
 
 local addon = AceAddon:GetAddon("PlatesClasses");
 local module = addon:NewModule(moduleName);
-local log = LibLogger:New(module);
+local log = LibLogger:New(addon);
 local Utils = addon.Utils;
 local platesClassesModule = addon:GetModule("PlatesClasses");
 local NameRecognizer = Utils.NameRecognizer;
