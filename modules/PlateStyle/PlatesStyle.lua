@@ -200,5 +200,5 @@ function module:BuildBlizzardOptions()
 		local themeSettings = self.themes[i]
 		result[themeSettings.name] = themeSettings.blizzardOptions;
 	end
-	return result;
+	return result, "Plate style";
 end
