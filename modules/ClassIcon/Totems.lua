@@ -37,9 +37,7 @@ function module:OnEnable()
 end
 
 function module:OnDisable()
-	self.Disabling = true;
 	addon:UpdateNameplates();
-	self.Disabling = false;
 	addon.UnregisterAllCallbacks(self);
 end
 
@@ -61,29 +59,19 @@ function module:OnNameplateAppearenceUpdating(eventName, nameplate, fastUpdate)
 	end
 end
 
-function module:OnNameplateUpdating(eventName, nameplate, fastUpdate, name)
+function module:OnNameplateUpdating(eventName, nameplate, fastUpdate, name, unitId)
 	local frame = Utils.NameplateIcon:GetOrCreateNameplateFrame(nameplate, self.db);
 	
 	if self:IsEnabled() then
 		frame.targetName = name
-
-		frame:SetCustomAppearance(function(this)
-				local info = self:GetTotemDisplayInfo(frame);
-				if info ~= nil then
-				if self.db.DisplayTotems[info.name] then
-					SetPortraitToTexture(frame.classTexture, info.icon);
-					frame.classTexture:SetTexCoord(0.075, 0.925, 0.075, 0.925);
-					frame.classBorderTexture:Hide();
-					this:Show()
-				end
-				
-				local nameRegion = LibNameplate:GetNameRegion(nameplate);
-				local nameplateNameText = nameRegion:GetText();
-			end
-		end)
-	else
-		if frame ~= nil and module:GetTotemDisplayInfo(frame) ~= nil then
-			frame:Clear();
+		local info = self:GetTotemDisplayInfo(frame);
+		if info ~= nil and self.db.DisplayTotems[info.name] then
+			frame:SetCustomAppearance(function(this)
+				SetPortraitToTexture(frame.classTexture, info.icon);
+				frame.classTexture:SetTexCoord(0.075, 0.925, 0.075, 0.925);
+				frame.classBorderTexture:Hide();
+				this:Show()
+			end);
 		end
 	end
 end

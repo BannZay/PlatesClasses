@@ -7,7 +7,6 @@ local AceConfigDialog = LibStub("AceConfigDialog-3.0");
 local addon = AceAddon:GetAddon("PlatesClasses");
 local log = LibLogger:New(addon);
 local module = addon:NewModule("Cache");
-module.Version = 2;
 module.cachingStorages = {}
 
 local Utils = addon.Utils;

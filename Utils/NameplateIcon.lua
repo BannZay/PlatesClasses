@@ -6,6 +6,8 @@ local addon = AceAddon:GetAddon("PlatesClasses");
 local util = {}
 addon.Utils[NAME] = util;
 
+util.nameplateIconFrameNameCounter = 1
+
 function util:AddVariables(db)
 	db.IconSettings = db.IconSettings or self:GetDefaultNameplateIconSettings();
 end
@@ -28,17 +30,15 @@ function util:GetNameplateFrame(nameplate)
 	return nameplate.nameplateIcon;
 end
 
-function util:ApplySettingsToFrame(frame, db)
-
-end
-
 function util:GetOrCreateNameplateFrame(nameplate, db)
 	if nameplate.nameplateIcon == nil then
-		local nameplateIcon = CreateFrame("Frame", nil, nameplate);
+		local nameplateIcon = CreateFrame("Frame", 'PlatesClassesIconFrame' .. util.nameplateIconFrameNameCounter, nameplate);
+		util.nameplateIconFrameNameCounter = util.nameplateIconFrameNameCounter + 1;
 		
 		nameplateIcon.Clear = function(this)
 			this:Hide();
 			this:SetMetadata({}, nil)
+			this:SetCustomAppearance(nil)
 		end
 		
 		nameplateIcon.SetCustomAppearance = function(this, appearenceFunc)
@@ -49,6 +49,7 @@ function util:GetOrCreateNameplateFrame(nameplate, db)
 			this.class = metadata.class;
 			this.isPlayer = metadata.isPlayer;
 			this.isHostile = metadata.isHostile;
+			this.isPet = metadata.isPet;
 			this.targetName = targetName;
 		end
 		
@@ -65,7 +66,7 @@ function util:GetOrCreateNameplateFrame(nameplate, db)
 				return
 			end
 			
-			if this.isPlayer == false then
+			if this.isPlayer ~= true and settings.playersOnly ~= false then
 				this:Hide();
 			elseif this.class == nil then
 				if settings.ShowQuestionMarks then

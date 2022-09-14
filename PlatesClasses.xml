@@ -10,5 +10,5 @@
     
     <Include file="modules\Cache\Cache.xml"/>
     <Include file="modules\PlateStyle\PlatesStyle.xml"/>
-    <Include file="modules\PlateIcon\PlateIcon.xml"/>
+    <Include file="modules\ClassIcon\ClassIcon.xml"/>
 </Ui>

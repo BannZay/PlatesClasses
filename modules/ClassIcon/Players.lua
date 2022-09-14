@@ -52,39 +52,34 @@ function module:OnNameplateRecycled(eventName, nameplate)
 	end
 end
 
-function module:OnNameplateUpdating(eventName, nameplate, fastUpdate)
-	local frame = Utils.NameplateIcon:GetNameplateFrame(nameplate)
-	
+function module:OnNameplateUpdating(eventName, nameplate, fastUpdate, name, unitId)
+	local frame = Utils.NameplateIcon:GetOrCreateNameplateFrame(nameplate, self.db);
+
 	if self:IsEnabled() then
 		if not fastUpdate then
 			local playerClasses = addon:GetStorage(self);
 			
 			local name = LibNameplate:GetName(nameplate);
-			local metadata = self:GetMetadata(nameplate, nameplate.unitId);
+			local metadata = self:GetMetadata(nameplate, unitId);
 			
 			if metadata.class == nil then
 				metadata.class = playerClasses:Get(name);
 				log:Log(70, "Storage " .. tostring(self) .. " returned '", metadata.class, "' for name ", name);
 			else
 				playerClasses:Set(name, metadata.class);
+				log:Log(60, "Setting class for player", name, 'to', metadata.class, '. Storage =', tostring(self))
 			end
 			
-			log:Log(40, "nameplate of '", name, "' are being updated with '", metadata.class, "' class");
-			
 			if metadata.isPlayer then
-				frame = frame or Utils.NameplateIcon:GetOrCreateNameplateFrame(nameplate, self.db);
 				frame:SetMetadata(metadata, name);
+				log:Log(25, "nameplate of '", name, "' are being updated with '", metadata.class or 'nil', "' class");
 			end
 			log:Log(99, "Updated nameplate '",name, "'")
 		end
 		
-		if frame ~= nil then
-			self:UpdateBorderColor(frame);
-		end
+		self:UpdateBorderColor(frame);
 	else
-		if frame ~= nil and frame.isPlayer then
-			frame:Clear();
-		end
+		frame:Clear();
 	end
 end
 
@@ -110,7 +105,6 @@ function module:GetMetadata(nameplate, unitId)
 		
 		metadata = {class = unifiedClass, isPlayer = isPlayer, isHostile = isHostile}
 	elseif nameplate ~= nil then
-	
 		local class, isHostile, isPlayer;
 		class = LibNameplate:GetClass(nameplate);
 		local reaction, unitType = LibNameplate:GetReaction(nameplate);
@@ -160,14 +154,14 @@ function module:ClassToIndex(unifiedClass)
 	return PLAYER_CLASSES_INDEXES[unifiedClass]
 end
 
-function module:AddUnit(unitID)
+function module:AddUnit(unitId)
 	local storage = addon:GetStorage(self);
-	local name = UnitName(unitID);
-	log:Log(40, "Adding unit '",  unitID ,"' with name '", name ,"'.")
+	local name = UnitName(unitId);
+	log:Log(40, "Adding unit '",  unitId ,"' with name '", name ,"'.")
 	
 	if name ~= nil then
-		local metadata = self:GetMetadata(nil, unitID);
-		log:Log(39, unitID, "resolved to class ", metadata.class);
+		local metadata = self:GetMetadata(nil, unitId);
+		log:Log(39, unitId, "resolved to class ", metadata.class);
 		if metadata.class ~= nil then
 			storage:Set(name, metadata.class);
 			addon:UpdateNameplate(name);
@@ -188,8 +182,8 @@ function events:PARTY_MEMBERS_CHANGED()
 	
 	if numPartyMembers ~= nil then
 		for i = 1, numPartyMembers do
-			local unitID = "party"..i;
-			self:AddUnit(unitID);
+			local unitId = "party"..i;
+			self:AddUnit(unitId);
 		end
 	end
 end

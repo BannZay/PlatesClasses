@@ -228,20 +228,20 @@ function addon:OnNameplateCreated(nameplate)
 end
 
 function addon:OnNameplateRecycled(nameplate)
-	nameplate.unitId = nil;
-	nameplate.GUID = nil;
-
+	local iconFrame = self.Utils.NameplateIcon:GetNameplateFrame(nameplate);
+	if iconFrame ~= nil then
+		iconFrame:Clear();
+	end
+	
 	addon.callbacks:Fire("OnNameplateRecycled", nameplate);
 end
 
-function addon:OnNameplateDiscoveredGuid(nameplate, GUID, unitID)
-	nameplate.unitId = unitID;
-	nameplate.GUID = GUID;
-	
-	self:UpdateNameplate(nameplate)
+function addon:OnNameplateDiscoveredGuid(nameplate, GUID, unitId)
+	local name = LibNameplate:GetName(nameplate);
+	self:UpdateNameplate(nameplate, false, name, unitId);
 end
 
-function addon:UpdateNameplate(nameplateOrName, fastUpdate)
+function addon:UpdateNameplate(nameplateOrName, fastUpdate, name, unitId)
 	if nameplateOrName == nil then
 		error("nameplateOrName must be either nameplate or name. It was nil");
 	end
@@ -250,22 +250,25 @@ function addon:UpdateNameplate(nameplateOrName, fastUpdate)
 		nameplateOrName = LibNameplate:GetNameplateByName(nameplateOrName);
 	end
 	
+	if name == nil and nameplateOrName ~= nil then
+		name = LibNameplate:GetName(nameplateOrName);
+	end
+	
 	if nameplateOrName ~= nil then
-		local name = LibNameplate:GetName(nameplateOrName);
-		addon.callbacks:Fire("OnNameplateUpdating", nameplateOrName, fastUpdate, name);
+		addon.callbacks:Fire("OnNameplateUpdating", nameplateOrName, fastUpdate, name, unitId);
 		self:UpdateNameplateAppearence(nameplateOrName, fastUpdate)
 	end
 end
 
 function addon:UpdateNameplateAppearence(nameplate, fastUpdate)
 	local name = LibNameplate:GetName(nameplate);
-	log(60, "Updating nameplate appearence for '", name, "'")
+	log(90, "Updating nameplate appearence for '", name, "'")
 	addon.callbacks:Fire("OnNameplateAppearenceUpdating", nameplate, fastUpdate, name);
 end
 
 function addon:UpdateNameplates(fastUpdate)
 	local nameplatesList = self:GetVisibleNameplates();
-	log:Log(30, "Updating nameplates state. Count =",  #nameplatesList, ", FastUpdate =", fastUpdate or "false");
+	log:Log(80, "Updating nameplates state. Count =",  #nameplatesList, ", FastUpdate =", fastUpdate or "false");
 	for i = 1, #nameplatesList do
 		local nameplate = nameplatesList[i];
 		if nameplate:IsVisible() then
@@ -329,7 +332,16 @@ function addon:SetStorage(categoryName, storage)
 end
 
 function addon:GetStorage(categoryName)
-	return self.storages[tostring(categoryName)];
+	local storage = self.storages[tostring(categoryName)];
+	
+	if storage == nil then
+		log(20, "storage was not set for", categoryName, ". Initializing with dummy storage.")
+		local dummyStorage = {}
+		storage = self:CreateStorage();
+		self.storages[tostring(categoryName)] = storage;
+	end
+
+	return storage;
 end
 
 function addon:OnProfileChanged(_, database)

@@ -55,4 +55,3 @@ function util:IsTotemName(name)
 	
 	return false;
 end
-
