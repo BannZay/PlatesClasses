@@ -1,6 +1,7 @@
 local AceAddon = LibStub("AceAddon-3.0");
 local addon = AceAddon:GetAddon("PlatesClasses");
 local LibLogger = LibStub("LibLogger-1.0");
+local LibNameplate = LibStub("LibNameplate-1.0");
 
 local Utils = addon.Utils;
 local Logger = LibLogger:New(addon);
@@ -23,5 +24,14 @@ function Utils:SetVisible(frame, isVisible, useAlphaValue)
 		else
 			frame:Hide();
 		end
+	end
+end
+
+function Utils:IsHostile(nameplate, unitId)
+	if unitId ~= nil then
+		return UnitReaction("player", unitId) < 4;
+	else
+		local reaction, unitType = LibNameplate:GetReaction(nameplate);
+		return reaction == "HOSTILE";
 	end
 end

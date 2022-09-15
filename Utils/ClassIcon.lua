@@ -1,4 +1,4 @@
-local NAME = "NameplateIcon"
+local NAME = "ClassIcon"
 
 local AceAddon = LibStub("AceAddon-3.0");
 local addon = AceAddon:GetAddon("PlatesClasses");
@@ -30,7 +30,7 @@ function util:GetNameplateFrame(nameplate)
 	return nameplate.nameplateIcon;
 end
 
-function util:GetOrCreateNameplateFrame(nameplate, db)
+function util:GetOrCreateNameplateFrame(nameplate)
 	if nameplate.nameplateIcon == nil then
 		local nameplateIcon = CreateFrame("Frame", 'PlatesClassesIconFrame' .. util.nameplateIconFrameNameCounter, nameplate);
 		util.nameplateIconFrameNameCounter = util.nameplateIconFrameNameCounter + 1;
@@ -39,6 +39,7 @@ function util:GetOrCreateNameplateFrame(nameplate, db)
 			this:Hide();
 			this:SetMetadata({}, nil)
 			this:SetCustomAppearance(nil)
+			this.classBorderTexture:Hide();
 		end
 		
 		nameplateIcon.SetCustomAppearance = function(this, appearenceFunc)
@@ -54,44 +55,38 @@ function util:GetOrCreateNameplateFrame(nameplate, db)
 		end
 		
 		nameplateIcon.UpdateAppearence = function(this, customSettings)
-			local settings = customSettings or db.IconSettings;
-			this.FollowNameplateColor = settings.FollowNameplateColor;
-			this:SetAlpha(settings.Alpha);
-			this:SetWidth(settings.Size);
-			this:SetHeight(settings.Size);
-			this:SetPoint("RIGHT", nameplate, "LEFT", settings.OffsetX, settings.OffsetY);
+			local settings = customSettings;
 			
-			if settings.EnemiesOnly and not this.isHostile then
-				this:Hide()
+			if settings.EnemiesOnly and this.isHostile == false then
 				return
 			end
 			
 			if this.isPlayer ~= true and settings.playersOnly ~= false then
-				this:Hide();
+				return
 			elseif this.class == nil then
 				if settings.ShowQuestionMarks then
 					SetPortraitToTexture(this.classTexture,"Interface\\Icons\\Inv_misc_questionmark")
 					this.classTexture:SetTexCoord(0.075, 0.925, 0.075, 0.925);
 					this:Show();
-				else
-					this:Hide();
 				end
-			else
+			elseif this.isPlayer then
 				this.classTexture:SetTexture(addon.path .. "\\images\\UI-CHARACTERCREATE-CLASSES_ROUND");
 				if CLASS_ICON_TCOORDS[this.class] == nil then
-					log:Error("Unexpected class:", this.class)
+					error("Unexpected class:", this.class)
 				end
 				this.classTexture:SetTexCoord(unpack(CLASS_ICON_TCOORDS[this.class]));
 				this:Show();
 			end
 
-			if this:IsVisible() then
-				if this.class ~= nil and settings.DisplayClassIconBorder then
-					this.classBorderTexture:Show();
-				else
-					this.classBorderTexture:Hide();
-				end
+			if this.class ~= nil and settings.DisplayClassIconBorder then
+				this.classBorderTexture:Show();
 			end
+			
+			this.FollowNameplateColor = settings.FollowNameplateColor;
+			this:SetAlpha(settings.Alpha);
+			this:SetWidth(settings.Size);
+			this:SetHeight(settings.Size);
+			this:SetPoint("RIGHT", nameplate, "LEFT", settings.OffsetX, settings.OffsetY);
 			
 			if this.customAppearance ~= nil then
 				this.customAppearance(this)
@@ -105,6 +100,7 @@ function util:GetOrCreateNameplateFrame(nameplate, db)
 		local textureBorder = nameplateIcon:CreateTexture(nil, "BORDER");
 		textureBorder:SetTexture(addon.path .. "\\images\\RoundBorder");
 		textureBorder:SetAllPoints()
+		textureBorder:Hide()
 		nameplateIcon.classBorderTexture = textureBorder;
 		nameplate.nameplateIcon = nameplateIcon;
 	end
@@ -148,6 +144,20 @@ function util:AddBlizzardOptions(options, dbConnection, iterator)
 		get = dbConnection.Get,
 		set = dbConnection.Set
 	}
+	
+	options.args["Alpha"] = 
+	{
+		type = "range",
+		name = "Alpha",
+		desc = "",
+		min = 0,
+		max = 1,
+		step = 0.1,
+		order = iterator(),
+		get = dbConnection.Get,
+		set = dbConnection.Set
+	}
+
 	
 	options.args["OffsetX"] = 
 	{
@@ -199,7 +209,7 @@ function util:AddBlizzardOptions(options, dbConnection, iterator)
 	{
 		type = "toggle",
 		name = "Show question marks",
-		desc = "Show question marks for unknown targets",
+		desc = "Show question marks for targets with unknown status",
 		order = iterator(),
 		get = dbConnection.Get,
 		set = dbConnection.Set

@@ -18,6 +18,11 @@ function module:OnInitialize()
 	{
 		--[key] = { spellId, icon, name }
 	}
+
+	self.totemKeys = 
+	{
+		--{key}
+	}
 	
 	for i = 1, #NameRecognizer.totemIds do
 		local spellId = NameRecognizer.totemIds[i];
@@ -26,6 +31,7 @@ function module:OnInitialize()
 		local icon = info[3];
 		local key = self:GetNameKey(name)
 		self.totems[key] = {name = name, spellId = spellId, icon = icon};
+		table.insert(self.totemKeys, key);
 	end
 
 end
@@ -33,11 +39,12 @@ end
 function module:OnEnable()
 	addon.RegisterCallback(self, "OnNameplateUpdating");
 	addon.RegisterCallback(self, "OnNameplateAppearenceUpdating");
+	addon.RegisterCallback(self, "OnNameplateRecycled");
 	addon:UpdateNameplates();
 end
 
 function module:OnDisable()
-	addon:UpdateNameplates();
+	self:HideNameplates();
 	addon.UnregisterAllCallbacks(self);
 end
 
@@ -53,15 +60,27 @@ function module:GetTotemDisplayInfo(frame)
 end
 
 function module:OnNameplateAppearenceUpdating(eventName, nameplate, fastUpdate)
-	local frame = Utils.NameplateIcon:GetOrCreateNameplateFrame(nameplate, self.db);
+	local frame = Utils.ClassIcon:GetOrCreateNameplateFrame(nameplate);
 	if self:GetTotemDisplayInfo(frame) ~= nil then
 		frame:UpdateAppearence(self.db.IconSettings);
 	end
 end
 
+function module:HideNameplates()
+	local nameplatesList = addon:GetVisibleNameplates();
+	for i = 1, #nameplatesList do
+		local nameplate = nameplatesList[i];
+		local frame = Utils.ClassIcon:GetOrCreateNameplateFrame(nameplate);
+		local info = self:GetTotemDisplayInfo(frame);
+		if info ~= nil then
+			frame:Clear();
+		end
+	end
+end
+
 function module:OnNameplateUpdating(eventName, nameplate, fastUpdate, name, unitId)
-	local frame = Utils.NameplateIcon:GetOrCreateNameplateFrame(nameplate, self.db);
-	
+	local frame = Utils.ClassIcon:GetOrCreateNameplateFrame(nameplate);
+
 	if self:IsEnabled() then
 		frame.targetName = name
 		local info = self:GetTotemDisplayInfo(frame);
@@ -69,10 +88,20 @@ function module:OnNameplateUpdating(eventName, nameplate, fastUpdate, name, unit
 			frame:SetCustomAppearance(function(this)
 				SetPortraitToTexture(frame.classTexture, info.icon);
 				frame.classTexture:SetTexCoord(0.075, 0.925, 0.075, 0.925);
-				frame.classBorderTexture:Hide();
 				this:Show()
 			end);
+
+			local isHostile = Utils:IsHostile(nameplate, unitId);
+			frame:SetMetadata({class = nil, isPlayer = false, isHostile = isHostile, isPet = true }, name)
 		end
+	end
+end
+
+
+function module:OnNameplateRecycled(eventName, nameplate)
+	local frame = Utils.ClassIcon:GetNameplateFrame(nameplate);
+	if frame ~= nil then
+		frame:Clear();
 	end
 end
 
@@ -87,7 +116,13 @@ function module:GetDbMigrations()
 			["Cleansing Totem"] = true,
 		};
 		
-		Utils.NameplateIcon:AddVariables(db);
+		Utils.ClassIcon:AddVariables(db);
+	end
+	
+	modules[2] = function(db)
+		db.TestMode = false;
+		db.IconSettings.playersOnly = false;
+		db.IconSettings.Alpha = 1;
 	end
 	
 	return modules;
@@ -137,8 +172,8 @@ function module:BuildBlizzardOptions()
 		order = iterator()
 	}
 	local iconSettingsDbConnection = Utils.DbConfig:New(function(key) return self.db.IconSettings end,
-		function(key, value) addon:UpdateAppearence() end, self.name .. "_iconSettingsDbConnection");
-	Utils.NameplateIcon:AddBlizzardOptions(iconSettingsOptions, iconSettingsDbConnection, iterator);
+		function(key, value) self:HideNameplates() addon:UpdateNameplates() end, self.name .. "_iconSettingsDbConnection");
+	Utils.ClassIcon:AddBlizzardOptions(iconSettingsOptions, iconSettingsDbConnection, iterator);
 	options.IconSettingsOptions = iconSettingsOptions
 
 	options["TotemListOptions"] =
@@ -148,7 +183,7 @@ function module:BuildBlizzardOptions()
 		args = {},
 		order = iterator()
 	}
-	local totemsDbConnection = Utils.DbConfig:New(function(key) return self.db.DisplayTotems end, nil, self.name .. "_totemsDbConnection");
+	local totemsDbConnection = Utils.DbConfig:New(function(key) return self.db.DisplayTotems end, function(key, value) self:HideNameplates() addon:UpdateNameplates() end, self.name .. "_totemsDbConnection");
 	self:AddTotemsListOptions(options["TotemListOptions"], totemsDbConnection, iterator);
 	
 	return options, displayName

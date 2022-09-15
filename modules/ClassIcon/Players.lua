@@ -39,21 +39,25 @@ function module:GetDbMigrations()
 	
 	migrations[1] = function(db) 
 		db.Enabled = true;
-		Utils.NameplateIcon:AddVariables(db);
+		Utils.ClassIcon:AddVariables(db);
+	end
+
+	migrations[2] = function(db)
+		db.IconSettings.Alpha = 1;
 	end
 	
 	return migrations;
 end
 
 function module:OnNameplateRecycled(eventName, nameplate)
-	local frame = Utils.NameplateIcon:GetNameplateFrame(nameplate);
+	local frame = Utils.ClassIcon:GetNameplateFrame(nameplate);
 	if frame ~= nil then
 		frame:Clear();
 	end
 end
 
 function module:OnNameplateUpdating(eventName, nameplate, fastUpdate, name, unitId)
-	local frame = Utils.NameplateIcon:GetOrCreateNameplateFrame(nameplate, self.db);
+	local frame = Utils.ClassIcon:GetOrCreateNameplateFrame(nameplate);
 
 	if self:IsEnabled() then
 		if not fastUpdate then
@@ -85,7 +89,7 @@ end
 
 function module:OnNameplateAppearenceUpdating(eventName, nameplate, fastUpdate)
 	if self:IsEnabled() then
-		local frame = Utils.NameplateIcon:GetNameplateFrame(nameplate);
+		local frame = Utils.ClassIcon:GetNameplateFrame(nameplate);
 		if frame ~= nil then
 			frame:UpdateAppearence(self.db.IconSettings);
 		end
@@ -201,7 +205,7 @@ function module:BuildBlizzardOptions()
 		order = iterator()
 	}
 	local iconSettingsDbConnection = Utils.DbConfig:New(function(key) return self.db.IconSettings end, function(key, value) addon:UpdateAppearence() end, self.name .. "_iconSettingsDbConnection");
-	Utils.NameplateIcon:AddBlizzardOptions(options["IconSettingsOptions"], iconSettingsDbConnection, iterator);
+	Utils.ClassIcon:AddBlizzardOptions(options["IconSettingsOptions"], iconSettingsDbConnection, iterator);
 	
 	return options, displayName
 end

@@ -228,7 +228,7 @@ function addon:OnNameplateCreated(nameplate)
 end
 
 function addon:OnNameplateRecycled(nameplate)
-	local iconFrame = self.Utils.NameplateIcon:GetNameplateFrame(nameplate);
+	local iconFrame = self.Utils.ClassIcon:GetNameplateFrame(nameplate);
 	if iconFrame ~= nil then
 		iconFrame:Clear();
 	end
@@ -271,9 +271,7 @@ function addon:UpdateNameplates(fastUpdate)
 	log:Log(80, "Updating nameplates state. Count =",  #nameplatesList, ", FastUpdate =", fastUpdate or "false");
 	for i = 1, #nameplatesList do
 		local nameplate = nameplatesList[i];
-		if nameplate:IsVisible() then
-			self:UpdateNameplate(nameplate, fastUpdate);
-		end
+		self:UpdateNameplate(nameplate, fastUpdate);
 	end
 end
 
@@ -295,9 +293,7 @@ function addon:UpdateAppearence(fastUpdate)
 	log:Log(30, "Updating appearence. Count  =",  #nameplatesList, ", FastUpdate =", fastUpdate or "false");
 	for i = 1, #nameplatesList do
 		local nameplate = nameplatesList[i];
-		if nameplate:IsVisible() then
-			self:UpdateNameplateAppearence(nameplate, fastUpdate);
-		end
+		self:UpdateNameplateAppearence(nameplate, fastUpdate);
 	end
 end
 

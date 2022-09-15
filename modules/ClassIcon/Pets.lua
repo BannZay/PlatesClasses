@@ -14,7 +14,6 @@ local NameRecognizer = Utils.NameRecognizer;
 function module:OnInitialize()
 	local storage = addon:CreateStorage()
 	addon:SetStorage(self.name, storage);
-	self.db.IconSettings.playersOnly = false;
 end
 
 function module:OnEnable()
@@ -24,11 +23,13 @@ function module:OnEnable()
 end
 
 function module:OnDisable()
-	addon:UpdateNameplates();
 	addon.UnregisterAllCallbacks(self);
+	self:HideNameplates();
 end
 
 function module:OnNameplateAppearenceUpdating(eventName, nameplate, fastUpdate)
+	local frame = Utils.ClassIcon:GetOrCreateNameplateFrame(nameplate);
+	frame:UpdateAppearence(self.db.IconSettings);
 end
 
 local familyToIcon = 
@@ -38,7 +39,7 @@ local familyToIcon =
 	["Voidwalker"]                   = [[Interface\Icons\Spell_shadow_summonvoidwalker]],
 	["Imp"]                          = [[Interface\Icons\Spell_shadow_summonimp]],
 	["Crab"]                         = [[Interface\Icons\Ability_hunter_pet_crab]],
-	["Ghoul"]                        = [[Interface\Icons\Spell_shadow_animatedead]]
+	["Ghoul"]                        = [[Interface\Icons\Spell_DeathKnight_ArmyOfTheDead]]
 }
 
 local function UpdatePetNameplateAppearence(nameplateFrame)
@@ -46,7 +47,6 @@ local function UpdatePetNameplateAppearence(nameplateFrame)
 		local icon = familyToIcon[nameplateFrame.class]
 		nameplateFrame.classTexture:SetTexCoord(0.075, 0.925, 0.075, 0.925);
 		SetPortraitToTexture(nameplateFrame.classTexture, icon);
-		nameplateFrame.classBorderTexture:Hide();
 		nameplateFrame:Show() -- remove it
 	end
 end
@@ -54,10 +54,22 @@ end
 function module:OnNameplateUpdating(eventName, nameplate, fastUpdate, name, unitId)
 	if not fastUpdate then
 		local metadata = self:GetMetadata(nameplate, name, unitId);
+		
 		if metadata ~= nil then
-			local frame = Utils.NameplateIcon:GetOrCreateNameplateFrame(nameplate, self.db);
+			local frame = Utils.ClassIcon:GetOrCreateNameplateFrame(nameplate);
 			frame:SetMetadata(metadata, name);
 			frame:SetCustomAppearance(UpdatePetNameplateAppearence)
+		end
+	end
+end
+
+function module:HideNameplates()
+	local nameplatesList = addon:GetVisibleNameplates();
+	for i = 1, #nameplatesList do
+		local nameplate = nameplatesList[i];
+		local frame = Utils.ClassIcon:GetOrCreateNameplateFrame(nameplate);
+		if frame.isPet then
+			frame:Clear()
 		end
 	end
 end
@@ -93,14 +105,19 @@ function module:GetDbMigrations()
 	
 	modules[1] = function(db)
 		db.Enabled = true;		
-		Utils.NameplateIcon:AddVariables(db);
+		Utils.ClassIcon:AddVariables(db);
+	end
+
+	modules[2] = function(db)
+		db.IconSettings.playersOnly = false;
+		db.IconSettings.Alpha = 1;
 	end
 	
 	return modules;
 end
 
 function module:BuildBlizzardOptions()
-	local dbConnection = Utils.DbConfig:New(function(key) return self.db end, function(newState) addon:UpdateAppearence() end, self);
+	local dbConnection = Utils.DbConfig:New(function(key) return self.db end, function(newState) self:HideNameplates() addon:UpdateNameplates() end, self);
 	local iterator = Utils.Iterator:New();
 	local options = {}
 
@@ -112,8 +129,8 @@ function module:BuildBlizzardOptions()
 		order = iterator()
 	}
 	local iconSettingsDbConnection = Utils.DbConfig:New(function(key) return self.db.IconSettings end,
-		function(key, value) addon:UpdateAppearence() end, self.name .. "_iconSettingsDbConnection");
-	Utils.NameplateIcon:AddBlizzardOptions(iconSettingsOptions, iconSettingsDbConnection, iterator);
+		function(key, value) self:HideNameplates() addon:UpdateNameplates() end, self.name .. "_iconSettingsDbConnection");
+	Utils.ClassIcon:AddBlizzardOptions(iconSettingsOptions, iconSettingsDbConnection, iterator);
 	options.IconSettingsOptions = iconSettingsOptions
 	
 	return options, displayName
