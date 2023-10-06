@@ -221,7 +221,6 @@ function addon:InitializeDb(module, moduleDb)
 	end
 end
 
-
 function addon:OnNameplateCreated(nameplate)
 	addon.callbacks:Fire("OnNameplateCreated", nameplate);
 	self:UpdateNameplate(nameplate)

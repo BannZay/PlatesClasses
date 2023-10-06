@@ -68,6 +68,8 @@ function util:GetOrCreateNameplateFrame(nameplate)
 					SetPortraitToTexture(this.classTexture,"Interface\\Icons\\Inv_misc_questionmark")
 					this.classTexture:SetTexCoord(0.075, 0.925, 0.075, 0.925);
 					this:Show();
+				else
+					this.classTexture:SetTexture(nil)
 				end
 			elseif this.isPlayer then
 				this.classTexture:SetTexture(addon.path .. "\\images\\UI-CHARACTERCREATE-CLASSES_ROUND");
@@ -80,6 +82,8 @@ function util:GetOrCreateNameplateFrame(nameplate)
 
 			if this.class ~= nil and settings.DisplayClassIconBorder then
 				this.classBorderTexture:Show();
+			else
+				this.classBorderTexture:Hide();
 			end
 			
 			this.FollowNameplateColor = settings.FollowNameplateColor;

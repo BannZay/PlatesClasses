@@ -78,7 +78,7 @@ function module:OnNameplateUpdating(eventName, nameplate, fastUpdate, name, unit
 				frame:SetMetadata(metadata, name);
 				log:Log(25, "nameplate of '", name, "' are being updated with '", metadata.class or 'nil', "' class");
 			end
-			log:Log(99, "Updated nameplate '",name, "'")
+			log:Log(99, "Updated nameplate '", name, "'")
 		end
 		
 		self:UpdateBorderColor(frame);

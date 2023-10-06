@@ -23,7 +23,8 @@ function module:OnInitialize()
 end
 
 function module:OnDbInitialized(db, dbRoot)
-	self:SetEnabledState(self.db.Enabled or true);
+	local enabled = (self.db.Enabled == true) or (self.db.Enabled == nil)
+	self:SetEnabledState(enabled)
 	self.Cache = dbRoot.global.Cache
 end
 
