@@ -62,19 +62,28 @@ end
 
 function addon:BuildBlizzardOptions()
 	local dbConnection = Utils.DbConfig:New(function(key) return self.dbRoot.global end, nil, self);
-	local options = {}
-	
-	options["LogLevel"] = 
+	local options = 
 	{
-		type = "range",
-		name = "Log level",
-		step = 1,
-		min = -1,
-		max = 100,
-		get = dbConnection.Get,
-		set = dbConnection:BuildSetter(function(value) log:SetMaximumLogLevel(value) end)
+		Description = 
+		{
+			type = "description",
+			name = "Core module",
+			fontSize = "medium",
+			order = 0
+		},
+		LogLevel = 
+		{
+			type = "range",
+			name = "Log level",
+			step = 1,
+			min = -1,
+			max = 100,
+			get = dbConnection.Get,
+			set = dbConnection:BuildSetter(function(value) log:SetMaximumLogLevel(value) end),
+			order = 1
+		}
 	}
-	
+
 	return options
 end
 
@@ -84,7 +93,7 @@ function addon:OnModulesInitialized()
 	
 	for name, subModule in self:IterateModules() do
 		if subModule.BuildBlizzardOptions ~= nil then
-			local groups, displayName = subModule:BuildBlizzardOptions()
+			local groups, displayName, description = subModule:BuildBlizzardOptions()
 			if groups == nil then
 				error("Module " .. name .. " returned nil options.");
 			end
@@ -113,6 +122,17 @@ function addon:OnModulesInitialized()
 					}
 				}
 			}
+			
+			
+			if description then
+				options.args["Description"] = 
+				{
+					type = "description",
+					name = description,
+					fontSize = "medium",
+					order = -1
+				}
+			end
 
 			for groupName, group in pairs(groups) do 
 				options.args[groupName] = group

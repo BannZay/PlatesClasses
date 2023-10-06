@@ -188,7 +188,8 @@ function module:CreateOptionsGroup(name, dbConnection, iterator)
 	{
 		type = "toggle",
 		name = "Display Highlights",
-		order = iterator()
+		order = iterator(),
+		desc = "Display semi transparent bar over nameplate health when you hovers health bar"
 	}
 	
 	return options;
@@ -200,5 +201,5 @@ function module:BuildBlizzardOptions()
 		local themeSettings = self.themes[i]
 		result[themeSettings.name] = themeSettings.blizzardOptions;
 	end
-	return result, "Plate style";
+	return result, "Plate style", "Allows configuring nameplate appearence for different states (i.e. you can hide level of pets only, show player names on mouse over only, etc.)"
 end

@@ -1,4 +1,4 @@
-local moduleName = "MouseOver"
+local moduleName = "MouseOvered"
 local AceAddon = LibStub("AceAddon-3.0");
 local LibLogger = LibStub("LibLogger-1.0");
 local LibNameplate = LibStub("LibNameplate-1.0");
@@ -44,7 +44,7 @@ end
 function module:BuildBlizzardOptions()
 	local iterator = Utils.Iterator:New();
 	local dbConnection = Utils.DbConfig:New(function(key) return self.db end, function() if self.db.Enabled then parent:StyleAllNameplates() end end , self);
-	local options = parent:CreateOptionsGroup("MouseOver", dbConnection, iterator)
+	local options = parent:CreateOptionsGroup(moduleName, dbConnection, iterator)
 	options.args["TreatAllPlatesAsMouseOvered"] = 
 	{
 		type = "toggle",

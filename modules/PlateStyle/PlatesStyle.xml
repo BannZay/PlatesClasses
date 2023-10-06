@@ -3,5 +3,6 @@
     <Script file="Players.lua"/>
     <Script file="NPCs.lua"/>
     <Script file="Totems.lua"/>
-    <Script file="Mouseover.lua"/>
+    <Script file="Mouseovered.lua"/>
+    <Script file="Targeted.lua"/>
 </Ui>

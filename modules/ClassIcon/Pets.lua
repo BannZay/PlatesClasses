@@ -133,5 +133,5 @@ function module:BuildBlizzardOptions()
 	Utils.ClassIcon:AddBlizzardOptions(iconSettingsOptions, iconSettingsDbConnection, iterator);
 	options.IconSettingsOptions = iconSettingsOptions
 	
-	return options, displayName
+	return options, displayName, "Adds class icons to pets"
 end

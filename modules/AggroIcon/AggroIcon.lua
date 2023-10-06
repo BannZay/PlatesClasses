@@ -264,5 +264,5 @@ function module:BuildBlizzardOptions()
 		set = iconSettingsConnection.Set
 	}
 
-	return options, displayName
+	return options, displayName, "Indicates players (and arena pets) which selected you as a target"
 end

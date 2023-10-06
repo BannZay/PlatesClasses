@@ -186,5 +186,5 @@ function module:BuildBlizzardOptions()
 	local totemsDbConnection = Utils.DbConfig:New(function(key) return self.db.DisplayTotems end, function(key, value) self:HideNameplates() addon:UpdateNameplates() end, self.name .. "_totemsDbConnection");
 	self:AddTotemsListOptions(options["TotemListOptions"], totemsDbConnection, iterator);
 	
-	return options, displayName
+	return options, displayName, "Adds class icons to totems"
 end

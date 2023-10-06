@@ -207,6 +207,6 @@ function module:BuildBlizzardOptions()
 	local iconSettingsDbConnection = Utils.DbConfig:New(function(key) return self.db.IconSettings end, function(key, value) addon:UpdateAppearence() end, self.name .. "_iconSettingsDbConnection");
 	Utils.ClassIcon:AddBlizzardOptions(options["IconSettingsOptions"], iconSettingsDbConnection, iterator);
 	
-	return options, displayName
+	return options, displayName, "Adds class icons to players"
 end
 

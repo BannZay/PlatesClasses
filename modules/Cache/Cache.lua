@@ -5,8 +5,9 @@ local AceConfig = LibStub("AceConfig-3.0");
 local AceConfigDialog = LibStub("AceConfigDialog-3.0");
 
 local addon = AceAddon:GetAddon("PlatesClasses");
+local displayName = "Cache";
 local log = LibLogger:New(addon);
-local module = addon:NewModule("Cache");
+local module = addon:NewModule(displayName);
 module.cachingStorages = {}
 
 local Utils = addon.Utils;
@@ -103,5 +104,5 @@ function module:BuildBlizzardOptions()
 		confirm = true
 	}
 	
-	return options
+	return options, nil, "Remembers scanned players classes so you dont have to hover over them even after the game restart"
 end
