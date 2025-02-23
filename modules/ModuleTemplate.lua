@@ -31,7 +31,7 @@ function module:GetDbMigrations()
 end
 
 function module:BuildBlizzardOptions()
-	local dbConnection = Utils.DbConfig:New(function(key) return self.db end, function(newState) addon:UpdateAppearence() end, self);
+	local dbConnection = Utils.DbConfig:New(function(key) return self.db end, function(newState) addon:UpdateAppearence() end);
 	local iterator = Utils.Iterator:New();
 	local options = {}
 	

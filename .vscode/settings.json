@@ -1,0 +1,14 @@
+{
+    "Lua.diagnostics.globals": [
+        "CreateFrame",
+        "SetPortraitToTexture",
+        "CLASS_ICON_TCOORDS",
+        "UnitClass",
+        "UnitIsPlayer",
+        "UnitReaction",
+        "PLAYER_CLASSES",
+        "UnitName",
+        "GetNumPartyMembers",
+        "UnitExists"
+    ]
+}

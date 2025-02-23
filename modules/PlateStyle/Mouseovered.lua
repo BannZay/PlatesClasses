@@ -43,7 +43,7 @@ end
 
 function module:BuildBlizzardOptions()
 	local iterator = Utils.Iterator:New();
-	local dbConnection = Utils.DbConfig:New(function(key) return self.db end, function() if self.db.Enabled then parent:StyleAllNameplates() end end , self);
+	local dbConnection = Utils.DbConfig:New(function(key) return self.db end, function() if self.db.Enabled then parent:StyleAllNameplates() end end);
 	local options = parent:CreateOptionsGroup(moduleName, dbConnection, iterator)
 	options.args["TreatAllPlatesAsMouseOvered"] = 
 	{
@@ -90,6 +90,8 @@ function events:UPDATE_MOUSEOVER_UNIT()
 	end
 end
 
+events.CURSOR_UPDATE = events.UPDATE_MOUSEOVER_UNIT
+
 function module:OnPlateMouseLeave(nameplate)
 	if self.mouseOveredNameplate == nameplate then
 		self.mouseOveredNameplate = nil
@@ -100,6 +102,7 @@ function module:OnPlateMouseLeave(nameplate)
 	else
 		parent:StyleNameplate(nameplate);
 	end
+	print("styled")
 end
 
 function module:OnPlateMouseCheckTimerTick(nameplate)

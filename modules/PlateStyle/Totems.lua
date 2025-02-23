@@ -22,7 +22,7 @@ end
 
 function module:BuildBlizzardOptions()
 	local iterator = Utils.Iterator:New();
-	local totemsNameplatesDbConnection = Utils.DbConfig:New(function(key) return self.db end, function() if self.db.Enabled then parent:StyleAllNameplates() end end, self);
+	local totemsNameplatesDbConnection = Utils.DbConfig:New(function(key) return self.db end, function() if self.db.Enabled then parent:StyleAllNameplates() end end);
 	return parent:CreateOptionsGroup("Totems", totemsNameplatesDbConnection, iterator)
 end
 

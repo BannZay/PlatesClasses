@@ -1,4 +1,3 @@
--- copy paste to create new module from this template
 local moduleName = "PlateAggro"
 local displayName = "Aggro"
 local AceAddon = LibStub("AceAddon-3.0");
@@ -58,6 +57,10 @@ function module:GetDbMigrations()
 			OffsetY = -9
 		}
 	end
+	
+	migrations[2] = function(db, root)
+		db.IconSettings.PetsOnly = true
+	end
 
 	return migrations;
 end
@@ -90,7 +93,7 @@ end
 
 function module:SetPetsMonitorEnabled(enabled)
 	if active and petsMonitorTimer == nil then
-		petsMonitorTimer = AceTimer:ScheduleRepeatingTimer(function()  if active then module:UpdatePets() end end, module.db.UpdateFrequency or 0.1);
+		petsMonitorTimer = AceTimer:ScheduleRepeatingTimer(function() if active then module:UpdatePets() end end, module.db.UpdateFrequency or 0.1);
 	elseif petsMonitorTimer ~= nil then
 		AceTimer:CancelTimer(petsMonitorTimer)
 		petsMonitorTimer = nil
@@ -105,6 +108,10 @@ end
 
 function events:UNIT_TARGET(unitId)
 	if active and unitId ~= "player" then
+		if self.db.IconSettings.PetsOnly and unitId:sub(-4, -2) ~= "pet" then 
+			return
+		end
+		 
 		local name = UnitName(unitId)
 		
 		if name ~= nil then
@@ -167,8 +174,8 @@ end
 
 
 function module:BuildBlizzardOptions()
-	local iconSettingsConnection = Utils.DbConfig:New(function(key) return self.db.IconSettings end, function(newState) addon:UpdateAppearence() end, self);
-	local dbConnection = Utils.DbConfig:New(function(key) return self.db end, function(newState) addon:UpdateAppearence() end, self)
+	local iconSettingsConnection = Utils.DbConfig:New(function(key) return self.db.IconSettings end, function(newState) addon:UpdateAppearence() end);
+	local dbConnection = Utils.DbConfig:New(function(key) return self.db end, function(newState) addon:UpdateAppearence() end)
 	local iterator = Utils.Iterator:New();
 	local options = {}
 
@@ -259,6 +266,16 @@ function module:BuildBlizzardOptions()
 		type = "toggle",
 		name = "Enemies only",
 		desc = "Show icons for enemies only",
+		order = iterator(),
+		get = iconSettingsConnection.Get,
+		set = iconSettingsConnection.Set
+	}
+	
+	options.IconSettings.args["PetsOnly"] = 
+	{
+		type = "toggle",
+		name = "Pets only",
+		desc = "Show icons for pets only",
 		order = iterator(),
 		get = iconSettingsConnection.Get,
 		set = iconSettingsConnection.Set

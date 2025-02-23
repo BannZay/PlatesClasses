@@ -1,5 +1,3 @@
-
-
 local moduleName = "PlatesClasses Totems"
 local displayName = "Totems"
 local AceAddon = LibStub("AceAddon-3.0");
@@ -53,7 +51,7 @@ function module:GetNameKey(name)
 end
 
 function module:GetTotemDisplayInfo(frame)
-	if frame.targetName ~= nil and NameRecognizer:IsTotemName(frame.targetName) then
+	if frame.targetName ~= nil and (frame.class == "Totem" or NameRecognizer:IsTotemName(frame.targetName)) then
 		local key = self:GetNameKey(frame.targetName);
 		return self.totems[key];
 	end
@@ -92,7 +90,7 @@ function module:OnNameplateUpdating(eventName, nameplate, fastUpdate, name, unit
 			end);
 
 			local isHostile = Utils:IsHostile(nameplate, unitId);
-			frame:SetMetadata({class = nil, isPlayer = false, isHostile = isHostile, isPet = true }, name)
+			frame:SetMetadata({class = "Totem", isPlayer = false, isHostile = isHostile }, name)
 		end
 	end
 end
@@ -160,7 +158,6 @@ function module:AddTotemsListOptions(options, dbConnection, iterator)
 end
 
 function module:BuildBlizzardOptions()
-	local dbConnection = Utils.DbConfig:New(function(key) return self.db end, function(newState) addon:UpdateAppearence() end, self);
 	local iterator = Utils.Iterator:New();
 	local options = {}
 
@@ -172,9 +169,9 @@ function module:BuildBlizzardOptions()
 		order = iterator()
 	}
 	local iconSettingsDbConnection = Utils.DbConfig:New(function(key) return self.db.IconSettings end,
-		function(key, value) self:HideNameplates() addon:UpdateNameplates() end, self.name .. "_iconSettingsDbConnection");
+		function(key, value) self:HideNameplates() addon:UpdateNameplates() end);
 	Utils.ClassIcon:AddBlizzardOptions(iconSettingsOptions, iconSettingsDbConnection, iterator);
-	options.IconSettingsOptions = iconSettingsOptions
+	options.IconSettings = iconSettingsOptions
 
 	options["TotemListOptions"] =
 	{
@@ -183,7 +180,7 @@ function module:BuildBlizzardOptions()
 		args = {},
 		order = iterator()
 	}
-	local totemsDbConnection = Utils.DbConfig:New(function(key) return self.db.DisplayTotems end, function(key, value) self:HideNameplates() addon:UpdateNameplates() end, self.name .. "_totemsDbConnection");
+	local totemsDbConnection = Utils.DbConfig:New(function(key) return self.db.DisplayTotems end, function(key, value) self:HideNameplates() addon:UpdateNameplates() end);
 	self:AddTotemsListOptions(options["TotemListOptions"], totemsDbConnection, iterator);
 	
 	return options, displayName, "Adds class icons to totems"

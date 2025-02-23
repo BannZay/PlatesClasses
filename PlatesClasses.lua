@@ -61,7 +61,7 @@ function addon:OnInitialize()
 end
 
 function addon:BuildBlizzardOptions()
-	local dbConnection = Utils.DbConfig:New(function(key) return self.dbRoot.global end, nil, self);
+	local dbConnection = Utils.DbConfig:New(function(key) return self.dbRoot.global end);
 	local options = 
 	{
 		Description = 
@@ -102,7 +102,7 @@ function addon:OnModulesInitialized()
 				displayName = subModule.moduleName;
 			end
 			
-			local dbConnection = Utils.DbConfig:New(function(key) return subModule.db end, nil, self);
+			local dbConnection = Utils.DbConfig:New(function(key) return subModule.db end, nil);
 			local options = 
 			{
 				type = "group",
@@ -118,7 +118,7 @@ function addon:OnModulesInitialized()
 						desc = "",
 						get = dbConnection.Get,
 						set = dbConnection:BuildSetter(function(newState) if newState then subModule:Enable() else subModule:Disable() end end),
-						order = 0
+						order = 1
 					}
 				}
 			}
@@ -130,7 +130,7 @@ function addon:OnModulesInitialized()
 					type = "description",
 					name = description,
 					fontSize = "medium",
-					order = -1
+					order = 0
 				}
 			end
 

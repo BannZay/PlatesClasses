@@ -61,23 +61,25 @@ function util:GetOrCreateNameplateFrame(nameplate)
 				return
 			end
 			
-			if this.isPlayer ~= true and settings.playersOnly ~= false then
-				return
-			elseif this.class == nil then
-				if settings.ShowQuestionMarks then
-					SetPortraitToTexture(this.classTexture,"Interface\\Icons\\Inv_misc_questionmark")
-					this.classTexture:SetTexCoord(0.075, 0.925, 0.075, 0.925);
+			if this.isPlayer then
+				if this.isPlayer ~= true and settings.playersOnly ~= false then
+					return
+				elseif this.class == nil then
+					if settings.ShowQuestionMarks then
+						SetPortraitToTexture(this.classTexture,"Interface\\Icons\\Inv_misc_questionmark")
+						this.classTexture:SetTexCoord(0.075, 0.925, 0.075, 0.925);
+						this:Show();
+					else
+						this.classTexture:SetTexture(nil)
+					end
+				elseif this.isPlayer then
+					this.classTexture:SetTexture(addon.path .. "\\images\\UI-CHARACTERCREATE-CLASSES_ROUND");
+					if CLASS_ICON_TCOORDS[this.class] == nil then
+						error("Unexpected class:", this.class)
+					end
+					this.classTexture:SetTexCoord(unpack(CLASS_ICON_TCOORDS[this.class]));
 					this:Show();
-				else
-					this.classTexture:SetTexture(nil)
 				end
-			elseif this.isPlayer then
-				this.classTexture:SetTexture(addon.path .. "\\images\\UI-CHARACTERCREATE-CLASSES_ROUND");
-				if CLASS_ICON_TCOORDS[this.class] == nil then
-					error("Unexpected class:", this.class)
-				end
-				this.classTexture:SetTexCoord(unpack(CLASS_ICON_TCOORDS[this.class]));
-				this:Show();
 			end
 
 			if this.class ~= nil and settings.DisplayClassIconBorder then
@@ -184,26 +186,6 @@ function util:AddBlizzardOptions(options, dbConnection, iterator)
 		softMin = -80,
 		softMax = 80,
 		step = 1,
-		order = iterator(),
-		get = dbConnection.Get,
-		set = dbConnection.Set
-	}
-	
-	options.args["DisplayClassIconBorder"] = 
-	{
-		type = "toggle",
-		name = "Display border",
-		desc = "",
-		order = iterator(),
-		get = dbConnection.Get,
-		set = dbConnection.Set
-	}
-	
-	options.args["BorderFollowNameplateColor"] = 
-	{
-		type = "toggle",
-		name = "Dynamic border color",
-		desc = "Set border color to the color of the nameplate",
 		order = iterator(),
 		get = dbConnection.Get,
 		set = dbConnection.Set

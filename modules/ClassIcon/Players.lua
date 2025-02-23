@@ -66,6 +66,10 @@ function module:OnNameplateUpdating(eventName, nameplate, fastUpdate, name, unit
 			local name = LibNameplate:GetName(nameplate);
 			local metadata = self:GetMetadata(nameplate, unitId);
 			
+			if not metadata.isPlayer then
+				return
+			end
+
 			if metadata.class == nil then
 				metadata.class = playerClasses:Get(name);
 				log:Log(70, "Storage " .. tostring(self) .. " returned '", metadata.class, "' for name ", name);
@@ -90,7 +94,7 @@ end
 function module:OnNameplateAppearenceUpdating(eventName, nameplate, fastUpdate)
 	if self:IsEnabled() then
 		local frame = Utils.ClassIcon:GetNameplateFrame(nameplate);
-		if frame ~= nil then
+		if frame and frame.isPlayer then
 			frame:UpdateAppearence(self.db.IconSettings);
 		end
 	end
@@ -101,8 +105,10 @@ function module:GetMetadata(nameplate, unitId)
 	
 	if unitId ~= nil then
 		local _, unifiedClass = UnitClass(unitId)
-		isPlayer = UnitIsPlayer(unitId) == 1;
-		reaction =  UnitReaction(unitId, "player");
+		local isPlayer = UnitIsPlayer(unitId) == 1;
+		local reaction =  UnitReaction(unitId, "player");
+		local isHostile = nil
+
 		if reaction ~= nil then
 			isHostile = reaction < 4;
 		end
@@ -166,7 +172,7 @@ function module:AddUnit(unitId)
 	if name ~= nil then
 		local metadata = self:GetMetadata(nil, unitId);
 		log:Log(39, unitId, "resolved to class ", metadata.class);
-		if metadata.class ~= nil then
+		if metadata.isPlayer and metadata.class ~= nil then
 			storage:Set(name, metadata.class);
 			addon:UpdateNameplate(name);
 		end
@@ -193,19 +199,40 @@ function events:PARTY_MEMBERS_CHANGED()
 end
 
 function module:BuildBlizzardOptions()
-	local dbConnection = Utils.DbConfig:New(function(key) return self.db end, function(newState) addon:UpdateAppearence() end, self);
 	local iterator = Utils.Iterator:New();
-	local options = {}
 	
-	options["IconSettingsOptions"] = 
+	local iconSettingsOptions = 
 	{
 		type = "group",
 		name = "Icon settings",
 		args = {},
 		order = iterator()
 	}
-	local iconSettingsDbConnection = Utils.DbConfig:New(function(key) return self.db.IconSettings end, function(key, value) addon:UpdateAppearence() end, self.name .. "_iconSettingsDbConnection");
+
+	local options =	{ IconSettingsOptions = iconSettingsOptions }
+
+	local iconSettingsDbConnection = Utils.DbConfig:New(function(key) return self.db.IconSettings end, function(key, value) addon:UpdateAppearence() end);
 	Utils.ClassIcon:AddBlizzardOptions(options["IconSettingsOptions"], iconSettingsDbConnection, iterator);
+
+	iconSettingsOptions.args["DisplayClassIconBorder"] = 
+	{
+		type = "toggle",
+		name = "Display border",
+		desc = "",
+		order = iterator(),
+		get = iconSettingsDbConnection.Get,
+		set = iconSettingsDbConnection.Set
+	}
+	
+	iconSettingsOptions.args["BorderFollowNameplateColor"] = 
+	{
+		type = "toggle",
+		name = "Dynamic border color",
+		desc = "Set border color to the color of the nameplate",
+		order = iterator(),
+		get = iconSettingsDbConnection.Get,
+		set = iconSettingsDbConnection.Set
+	}
 	
 	return options, displayName, "Adds class icons to players"
 end

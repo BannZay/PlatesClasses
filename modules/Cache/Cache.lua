@@ -90,7 +90,6 @@ function module:CreateStorage(category)
 end
 
 function module:BuildBlizzardOptions()
-	local dbConnection = Utils.DbConfig:New(function(key) return self.db end, nil, self);
 	local iterator = Utils.Iterator:New();
 	
 	local options = {}

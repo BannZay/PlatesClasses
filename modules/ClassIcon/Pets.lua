@@ -117,7 +117,6 @@ function module:GetDbMigrations()
 end
 
 function module:BuildBlizzardOptions()
-	local dbConnection = Utils.DbConfig:New(function(key) return self.db end, function(newState) self:HideNameplates() addon:UpdateNameplates() end, self);
 	local iterator = Utils.Iterator:New();
 	local options = {}
 
@@ -129,7 +128,7 @@ function module:BuildBlizzardOptions()
 		order = iterator()
 	}
 	local iconSettingsDbConnection = Utils.DbConfig:New(function(key) return self.db.IconSettings end,
-		function(key, value) self:HideNameplates() addon:UpdateNameplates() end, self.name .. "_iconSettingsDbConnection");
+		function(key, value) self:HideNameplates() addon:UpdateNameplates() end);
 	Utils.ClassIcon:AddBlizzardOptions(iconSettingsOptions, iconSettingsDbConnection, iterator);
 	options.IconSettingsOptions = iconSettingsOptions
 	
