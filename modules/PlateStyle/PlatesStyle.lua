@@ -19,7 +19,8 @@ local defaultSettings =
 }
 
 function module:OnInitialize()
-	self.themes = {}
+	self.themes = { }
+	self:AddTheme("Default Theme", function() return defaultSettings end, nil, -1)
 end
 
 function module:OnDbInitialized(db, dbRoot)
@@ -51,15 +52,18 @@ function module:OnNameplateRecycled(event, nameplate)
 end
 
 function module:GetSettings(nameplate, name)
-	for i=1, #self.themes do
+	for i=#self.themes, 1, -1  do
 		local themeSettings = self.themes[i]
 		local themeProvider = themeSettings.provider
 		local theme = themeProvider(nameplate, name)
-		
+				
 		if theme ~= nil then
-			return theme;
+			theme.name = themeSettings.name or "Unnamed Theme"
+			return theme
 		end
 	end
+
+	return defaultSettings
 end
 
 function module:StyleNameplate(nameplate, settings)
@@ -68,7 +72,9 @@ function module:StyleNameplate(nameplate, settings)
 		
 		local name = LibNameplate:GetName(nameplate);
 		
-		settings = settings or self:GetSettings(nameplate, name) or defaultSettings;
+		settings = settings or self:GetSettings(nameplate, name);
+		
+		log(75, "Nameplate theme for '", name ,"' was resolved to", settings.name)
 		
 		local allRegions = {nameplate:GetRegions()};
 		

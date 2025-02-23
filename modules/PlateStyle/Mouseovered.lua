@@ -12,23 +12,35 @@ local log = LibLogger:New(addon);
 local Utils = addon.Utils;
 local events = LibEvents:New(module)
 
-local provider = function(nameplate, name) if module.mouseOveredNameplate ~= nil and (module.db.TreatAllPlatesAsMouseOvered or module.mouseOveredNameplate == nameplate) then return module.db end end
+local provider = function(nameplate, name) 
+		if module.applyToAll or (name and UnitName("mouseover") == name) then
+			return module.db
+		end
+
+		print(name, UnitName("mouseover"))
+	end
 
 function module:OnInitialize()
-	parent:AddTheme(moduleName, provider, self:BuildBlizzardOptions(), -5)
+	parent:AddTheme(moduleName, provider, self:BuildBlizzardOptions(), 5)
 	events:Disable();
 end
 
 function module:OnEnable()
+	addon.RegisterCallback(self, "OnNameplateAppearenceUpdating");
 	events:Enable();
 end
 
 function module:OnDisable()
 	events:Disable();
+	addon.UnregisterCallback(self, "OnNameplateAppearenceUpdating");
 	
 	if self.timer ~= nil then
 		AceTimer:CancelTimer(self.timer);
 	end
+end
+
+function module:OnNameplateAppearenceUpdating(eventName, nameplate, fastUpdate)
+	parent:StyleNameplate(nameplate);
 end
 
 function module:GetDbMigrations()
@@ -41,10 +53,17 @@ function module:GetDbMigrations()
 	return migrations;
 end
 
+function module:OnSettingUpdated(setting, value)
+	if self.db.Enabled then
+		parent:StyleAllNameplates()
+	end
+end
+
 function module:BuildBlizzardOptions()
 	local iterator = Utils.Iterator:New();
-	local dbConnection = Utils.DbConfig:New(function(key) return self.db end, function() if self.db.Enabled then parent:StyleAllNameplates() end end);
+	local dbConnection = Utils.DbConfig:New(function(key) return self.db end, function(...) self:OnSettingUpdated(...) end);
 	local options = parent:CreateOptionsGroup(moduleName, dbConnection, iterator)
+
 	options.args["TreatAllPlatesAsMouseOvered"] = 
 	{
 		type = "toggle",
@@ -56,33 +75,19 @@ function module:BuildBlizzardOptions()
 	return options;
 end
 
-function module:OnPlateMouseEnter(nameplate)
-	if self.timer ~= nil then
-		AceTimer:CancelTimer(self.timer)
-	end
-	
-	if self.mouseOveredNameplate ~= nil then
-		module:OnPlateMouseLeave(self.mouseOveredNameplate);
-	end
-	
-	self.mouseOveredNameplate = nameplate
-	
-	if self.db.TreatAllPlatesAsMouseOvered then
-		parent:StyleAllNameplates();
-	else
-		parent:StyleNameplate(nameplate);
-	end
-	
-	module.timer = AceTimer:ScheduleRepeatingTimer(function() self:OnPlateMouseCheckTimerTick(nameplate) end, 0.1);
-end
-
 function events:UPDATE_MOUSEOVER_UNIT()
 	if self.db.Enabled then
 		if UnitExists("mouseover") then
 			local unitName = UnitName("mouseover");
 			local nameplate = LibNameplate:GetNameplateByName(unitName);
 			if nameplate ~= nil then
-				self:OnPlateMouseEnter(nameplate);
+				if self.timer ~= nil then
+					AceTimer:CancelTimer(self.timer)
+				end
+				
+				self:OnPlateMouseEnter(nameplate)
+
+				module.timer = AceTimer:ScheduleRepeatingTimer(function() self:OnPlateMouseCheckTimerTick(nameplate) end, 0.1);
 			else
 				log(3, "nameplate for mouseover unit with name '", unitName, "' was not found");
 			end
@@ -92,22 +97,51 @@ end
 
 events.CURSOR_UPDATE = events.UPDATE_MOUSEOVER_UNIT
 
-function module:OnPlateMouseLeave(nameplate)
+function module:OnPlateMouseEnter(nameplate)
 	if self.mouseOveredNameplate == nameplate then
-		self.mouseOveredNameplate = nil
+		return false
 	end
 	
-	if self.db.TreatAllPlatesAsMouseOvered and self.mouseOveredNameplate == nil then
+	log(60, "OnPlateMouseEnter", function() return LibNameplate:GetName(nameplate) end)
+
+	if self.mouseOveredNameplate ~= nil then
+		module:OnPlateMouseLeave();
+	end	
+
+	self.mouseOveredNameplate = nameplate
+	
+	if self.db.TreatAllPlatesAsMouseOvered then
+		self.applyToAll = true
 		parent:StyleAllNameplates();
 	else
 		parent:StyleNameplate(nameplate);
 	end
-	print("styled")
+
+	return true;
+end
+
+function module:OnPlateMouseLeave()
+	if self.mouseOveredNameplate == nil or LibNameplate:GetName(self.mouseOveredNameplate) == UnitName("mouseover") then
+		return false
+	end
+
+	log(60, "OnPlateMouseLeave", function() return LibNameplate:GetName(self.mouseOveredNameplate) end)
+
+	if self.db.TreatAllPlatesAsMouseOvered then
+		parent:StyleAllNameplates();
+	else
+		parent:StyleNameplate(self.mouseOveredNameplate);
+	end
+
+	self.mouseOveredNameplate = nil
+	self.applyToAll = false
+
+	return true;
 end
 
 function module:OnPlateMouseCheckTimerTick(nameplate)
-	if not UnitExists("mouseover") or (UnitName("mouseover") ~= LibNameplate:GetName(nameplate)) then 
+	if not UnitExists("mouseover") or (UnitName("mouseover") ~= LibNameplate:GetName(nameplate)) then
 		AceTimer:CancelTimer(self.timer)
-		self:OnPlateMouseLeave(nameplate);
+		self:OnPlateMouseLeave();
 	end
 end
