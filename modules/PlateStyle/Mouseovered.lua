@@ -16,8 +16,6 @@ local provider = function(nameplate, name)
 		if module.applyToAll or (name and UnitName("mouseover") == name) then
 			return module.db
 		end
-
-		print(name, UnitName("mouseover"))
 	end
 
 function module:OnInitialize()

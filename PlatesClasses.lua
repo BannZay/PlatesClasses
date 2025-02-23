@@ -64,13 +64,6 @@ function addon:BuildBlizzardOptions()
 	local dbConnection = Utils.DbConfig:New(function(key) return self.dbRoot.global end);
 	local options = 
 	{
-		Description = 
-		{
-			type = "description",
-			name = "Core module",
-			fontSize = "medium",
-			order = 0
-		},
 		LogLevel = 
 		{
 			type = "range",
