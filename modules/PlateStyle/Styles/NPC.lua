@@ -1,4 +1,4 @@
-local moduleName = "NPCs"
+local moduleName = "NPC"
 local AceAddon = LibStub("AceAddon-3.0");
 local LibLogger = LibStub("LibLogger-1.0");
 local LibNameplate = LibStub("LibNameplate-1.0");
@@ -23,7 +23,7 @@ end
 
 function module:BuildBlizzardOptions()
 	local dbConnection = Utils.DbConfig:New(function(key) return self.db end, function() if self.db.Enabled then parent:StyleAllNameplates() end end);
-	return parent:CreateOptionsGroup("NPCs", dbConnection)
+	return parent:CreateOptionsGroup(moduleName, dbConnection)
 end
 
 function module:GetDbMigrations()

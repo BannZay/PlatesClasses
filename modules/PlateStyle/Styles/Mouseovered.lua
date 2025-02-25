@@ -58,15 +58,16 @@ function module:OnSettingUpdated(setting, value)
 end
 
 function module:BuildBlizzardOptions()
+	local iterator = Utils.Iterator:New()
 	local dbConnection = Utils.DbConfig:New(function(key) return self.db end, function(...) self:OnSettingUpdated(...) end);
-	local options = parent:CreateOptionsGroup(moduleName, dbConnection, Utils.Iterator:New(5))
+	local options = parent:CreateOptionsGroup(moduleName, dbConnection, iterator)
 
 	options.args["TreatAllPlatesAsMouseOvered"] = 
 	{
 		type = "toggle",
 		name = "All nameplates",
 		desc = "Treat all nameplates as mouseovered if any nameplate was mouseovered",
-		order = 1,
+		order = iterator(),
 	}
 	
 	return options;

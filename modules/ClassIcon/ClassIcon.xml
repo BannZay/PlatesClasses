@@ -2,4 +2,5 @@
     <Script file="Players.lua"/>
     <Script file="Totems.lua"/>
     <Script file="Pets.lua"/>
+    <Script file="Agro.lua"/>
 </Ui>

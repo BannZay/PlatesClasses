@@ -1,8 +1,9 @@
 <Ui xmlns="http://www.blizzard.com/wow/ui/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/">
     <Script file="PlatesStyle.lua"/>
-    <Script file="Players.lua"/>
-    <Script file="NPCs.lua"/>
-    <Script file="Totems.lua"/>
-    <Script file="Mouseovered.lua"/>
-    <Script file="Targeted.lua"/>
+    <Script file="Styles\Default.lua"/>
+    <Script file="Styles\Player.lua"/>
+    <Script file="Styles\NPC.lua"/>
+    <Script file="Styles\Totem.lua"/>
+    <Script file="Styles\Mouseovered.lua"/>
+    <Script file="Styles\Targeted.lua"/>
 </Ui>

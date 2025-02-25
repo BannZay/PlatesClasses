@@ -10,6 +10,7 @@ local Utils = addon.Utils;
 
 local defaultSettings = 
 {
+	Enabled = false,
 	DisplayLevel = true,
 	DisplayName = true,
 	DisplayRaidIcon = true,
@@ -21,7 +22,6 @@ local defaultSettings =
 
 function module:OnInitialize()
 	self.themes = { }
-	self:AddTheme("Default Theme", function() return defaultSettings end, nil, -1)
 end
 
 function module:OnDbInitialized(db, dbRoot)
@@ -63,8 +63,6 @@ function module:GetSettings(nameplate, name)
 			return theme
 		end
 	end
-
-	return defaultSettings
 end
 
 function module:StyleNameplate(nameplate, settings)
@@ -74,6 +72,11 @@ function module:StyleNameplate(nameplate, settings)
 		local name = LibNameplate:GetName(nameplate);
 		
 		settings = settings or self:GetSettings(nameplate, name);
+
+		if settings == nil then
+			log(2, "Theme was not resolved for", name)
+			return
+		end
 		
 		log(75, "Nameplate theme for '", name ,"' was resolved to", settings.name)
 		
@@ -152,7 +155,7 @@ function module:CreateOptionsGroup(name, dbConnection, iterator)
 	options.args["Enabled"] =
 	{
 		type = "toggle",
-		name = "Enable custom style",
+		name = "Override default style",
 		width = "full",
 		set = dbConnection:BuildSetter(function(newState) self:StyleAllNameplates() end),
 		order = iterator(),

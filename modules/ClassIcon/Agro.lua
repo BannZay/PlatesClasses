@@ -1,5 +1,4 @@
-local moduleName = "PlateAggro"
-local displayName = "Aggro"
+local moduleName = "Agro"
 local AceAddon = LibStub("AceAddon-3.0");
 local LibLogger = LibStub("LibLogger-1.0");
 local LibEvents = LibStub("LibEvents-1.0");
@@ -280,5 +279,5 @@ function module:BuildBlizzardOptions(iterator)
 		set = iconSettingsConnection.Set
 	}
 
-	return options, displayName, "Indicates players (and arena pets) which selected you as a target"
+	return options, moduleName, "Indicates players (and arena pets) which selected you as a target"
 end
