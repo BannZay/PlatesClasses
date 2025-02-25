@@ -15,7 +15,8 @@ local defaultSettings =
 	DisplayRaidIcon = true,
 	DisplayHpBar = true,
 	DisplayBorder = true,
-	DisplayHighlight = true
+	DisplayHighlight = true,
+	DisplayEliteRegion = false
 }
 
 function module:OnInitialize()
@@ -90,6 +91,9 @@ function module:StyleNameplate(nameplate, settings)
 		local healthBarRegion = LibNameplate:GetHealthBar(nameplate);
 		Utils:SetVisible(healthBarRegion, settings.DisplayHpBar, 1);
 		
+		local eliteRegion = LibNameplate:GetEliteRegion(nameplate);
+		Utils:SetVisible(eliteRegion, settings.DisplayEliteRegion, 1);
+
 		local borderRegion = allRegions[2];
 		if borderRegion ~= nil then
 			Utils:SetVisible(borderRegion, settings.DisplayBorder, 1);
@@ -196,6 +200,13 @@ function module:CreateOptionsGroup(name, dbConnection, iterator)
 		name = "Display Highlights",
 		order = iterator(),
 		desc = "Display semi transparent bar over nameplate health when you hovers health bar"
+	}
+
+	options.args["DisplayEliteRegion"] = 
+	{
+		type = "toggle",
+		name = "Display Elite Region",
+		order = iterator()
 	}
 	
 	return options;

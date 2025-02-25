@@ -54,6 +54,18 @@ function module:GetDbMigrations()
 		end
 	end
 
+	migrations[3] = function(db, dbRoot)
+		for category, cache in pairs(dbRoot.global.Cache) do
+			local count = 0
+			
+			for _ in pairs(cache) do
+				count = count + 1 
+			end
+			
+			cache._count = count
+		end
+	end
+
 	return migrations;
 end
 
@@ -78,22 +90,37 @@ function module:CreateStorage(category)
 	category = tostring(category)
 	
 	local get = function(storage, key) return self.PlayerClassConverter:ToOriginal(self.Cache[category][key]) end
-	local set = function(storage, key, value) self.Cache[category][key] = self.PlayerClassConverter:ToConfig(value) end
-	local reset = function(storage, key) self.Cache[category] = {} end
+	local set = function(storage, key, value) 
+		local cache = self.Cache[category]
+		local oldValue = cache[key]
+			cache[key] = self.PlayerClassConverter:ToConfig(value) 
+			if oldValue == nil then
+				cache._count = cache._count + 1 
+			end
+		end
+	local reset = function(storage) self.Cache[category] = { _count = 0 } end
+	local itemsCount = function (storage) return self.Cache[category]._count end
 	
 	return {
 		Category = category,
 		Get = get,
 		Set = set,
-		Reset = reset
+		Reset = reset,
+		ItemsCount = itemsCount
 	}
 end
 
-function module:BuildBlizzardOptions()
-	local iterator = Utils.Iterator:New();
-	
+function module:BuildBlizzardOptions(iterator)	
 	local options = {}
 	
+	options["Count"] = 
+	{
+		type = "description",
+		name = function() return "Items count:" .. tostring(self.cachingStorages[tostring(addon:GetModule("PlatesClasses"))]:ItemsCount()) end,
+		fontSize = "medium",
+		order = iterator(),
+	}
+
 	options["Reset"] = 
 	{
 		type = "execute",

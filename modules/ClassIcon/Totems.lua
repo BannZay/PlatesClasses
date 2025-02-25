@@ -157,8 +157,7 @@ function module:AddTotemsListOptions(options, dbConnection, iterator)
 	end
 end
 
-function module:BuildBlizzardOptions()
-	local iterator = Utils.Iterator:New();
+function module:BuildBlizzardOptions(iterator)
 	local options = {}
 
 	local iconSettingsOptions = 

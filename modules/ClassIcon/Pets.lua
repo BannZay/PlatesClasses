@@ -39,15 +39,23 @@ local familyToIcon =
 	["Voidwalker"]                   = [[Interface\Icons\Spell_shadow_summonvoidwalker]],
 	["Imp"]                          = [[Interface\Icons\Spell_shadow_summonimp]],
 	["Crab"]                         = [[Interface\Icons\Ability_hunter_pet_crab]],
-	["Ghoul"]                        = [[Interface\Icons\Spell_DeathKnight_ArmyOfTheDead]]
+	["Ghoul"]                        = [[Interface\Icons\Spell_DeathKnight_ArmyOfTheDead]],
+	["Boar"]                         = [[Interface\Icons\Ability_hunter_pet_boar]],
+	["Ravager"]						 = [[Interface\Icons\Ability_hunter_pet_ravager]],
+	["NotSupported"]				 = [[Interface\Icons\Inv_box_petcarrier_01]]
 }
-
 local function UpdatePetNameplateAppearence(nameplateFrame)
 	if nameplateFrame.isPet then
-		local icon = familyToIcon[nameplateFrame.class]
+		local icon = familyToIcon[nameplateFrame.class] 
+		
+		if icon == nil then
+			icon = familyToIcon["NotSupported"]
+			log(3, "Was not found icon for pet with from family '", nameplateFrame.class, "'")
+		end
 		nameplateFrame.classTexture:SetTexCoord(0.075, 0.925, 0.075, 0.925);
 		SetPortraitToTexture(nameplateFrame.classTexture, icon);
-		nameplateFrame:Show() -- remove it
+		nameplateFrame:Show()
+		nameplateFrame.classTexture:Show()
 	end
 end
 
@@ -116,8 +124,7 @@ function module:GetDbMigrations()
 	return modules;
 end
 
-function module:BuildBlizzardOptions()
-	local iterator = Utils.Iterator:New();
+function module:BuildBlizzardOptions(iterator)
 	local options = {}
 
 	local iconSettingsOptions = 

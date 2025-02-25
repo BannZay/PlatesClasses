@@ -173,10 +173,9 @@ function module:GetOrCreateFrame(nameplate)
 end
 
 
-function module:BuildBlizzardOptions()
+function module:BuildBlizzardOptions(iterator)
 	local iconSettingsConnection = Utils.DbConfig:New(function(key) return self.db.IconSettings end, function(newState) addon:UpdateAppearence() end);
 	local dbConnection = Utils.DbConfig:New(function(key) return self.db end, function(newState) addon:UpdateAppearence() end)
-	local iterator = Utils.Iterator:New();
 	local options = {}
 
 	options.IconSettings = 

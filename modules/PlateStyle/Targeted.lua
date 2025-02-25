@@ -42,9 +42,8 @@ function module:GetDbMigrations()
 end
 
 function module:BuildBlizzardOptions()
-	local iterator = Utils.Iterator:New();
 	local dbConnection = Utils.DbConfig:New(function(key) return self.db end, function() if self.db.Enabled then parent:StyleAllNameplates() end end);
-	local options = parent:CreateOptionsGroup(moduleName, dbConnection, iterator)
+	local options = parent:CreateOptionsGroup(moduleName, dbConnection)
 	
 	return options;
 end

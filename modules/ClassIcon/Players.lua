@@ -198,8 +198,7 @@ function events:PARTY_MEMBERS_CHANGED()
 	end
 end
 
-function module:BuildBlizzardOptions()
-	local iterator = Utils.Iterator:New();
+function module:BuildBlizzardOptions(iterator)
 	
 	local iconSettingsOptions = 
 	{

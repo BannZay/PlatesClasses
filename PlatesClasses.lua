@@ -30,8 +30,13 @@ function addon:OnInitialize()
 		profile = 
 		{
 			Enabled = true,
-			UpdateFrequency = 1;
-			Version = 0
+			UpdateFrequency = 1
+		},
+		global = 
+		{
+			LogLevel = -1,
+			Modules = {},
+			Version = 1
 		}
 	};
 	local db = AceDb:New("PlatesClassesDB", dbDefaults, true);
@@ -86,7 +91,9 @@ function addon:OnModulesInitialized()
 	
 	for name, subModule in self:IterateModules() do
 		if subModule.BuildBlizzardOptions ~= nil then
-			local groups, displayName, description = subModule:BuildBlizzardOptions()
+			local iterator = Utils.Iterator:New(5)
+
+			local groups, displayName, description = subModule:BuildBlizzardOptions(iterator)
 			if groups == nil then
 				error("Module " .. name .. " returned nil options.");
 			end
@@ -115,7 +122,6 @@ function addon:OnModulesInitialized()
 					}
 				}
 			}
-			
 			
 			if description then
 				options.args["Description"] = 
@@ -169,13 +175,10 @@ end
 
 function addon:GetDbMigrations()
 	local migrations = {}
-	
-	migrations[1] = function(db)
-		db.modules = {}
-	end
-	
-	migrations[2] = function(db, dbRoot)
-		dbRoot.global.LogLevel = -1;
+	migrations[3] = function(db, dbRoot)
+		for moduleName, module in pairs(db.modules) do
+			dbRoot.global.Modules[moduleName] = { Version = module.Version }
+		end
 	end
 	
 	return migrations;
@@ -186,27 +189,22 @@ function addon:InitializeDb(module, moduleDb)
 		module.db = moduleDb;
 	end
 	
-	if module.db.Version == nil then
-		module.db.Version = 0;
-	end
-	
-	if type(module.db.Version) ~= "number" then
-		error("module '" .. module.name .. "' has invalid database version");
-	end
+	self.dbRoot.global.Modules = self.dbRoot.global.Modules or {}
+	self.dbRoot.global.Modules[module.name] = self.dbRoot.global.Modules[module.name] or { Version = 0 }
 	
 	if module.db.modules == nil then
 		module.db.modules = {}
-	end
-	
+	end	
+
 	if module.GetDbMigrations ~= nil then
 		local migrations = module:GetDbMigrations();
 		
 		for migrationVersion, migration in pairs(migrations) do
-			local oldDbVersion = module.db.Version;
-			if migrationVersion > module.db.Version then
+			local oldDbVersion = self.dbRoot.global.Modules[module.name].Version;
+			if migrationVersion > self.dbRoot.global.Modules[module.name].Version then
 				migration(module.db, self.dbRoot); -- upgrade db to the next version
-				module.db.Version = migrationVersion;
-				log:Log(10, "Upgraded module '", tostring(module), "'db version from", oldDbVersion, "to", moduleDb.Version);
+				self.dbRoot.global.Modules[module.name].Version = migrationVersion;
+				log:Log(3, "Upgraded module '", tostring(module), "'db version from", oldDbVersion, "to", moduleDb.Version);
 			end
 		end
 	end
@@ -221,10 +219,8 @@ function addon:InitializeDb(module, moduleDb)
 		addon:InitializeDb(subModule, subModuleDb);
 	end
 	
-	if  module.db.Enabled == nil then
+	if module.db.Enabled == nil then
 		module.db.Enabled = true;
-	else
-	
 	end
 	
 	module:SetEnabledState(module.db.Enabled);
