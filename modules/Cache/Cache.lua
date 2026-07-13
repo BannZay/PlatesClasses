@@ -35,6 +35,7 @@ function module:GetDbMigrations()
 	migrations[1] = function(db, dbRoot)
 		db.Enabled = true;
 		
+		-- cached data lives in global namespace to avoid duplications
 		dbRoot.global.Cache = 
 		{
 			PlayerClasses = {}

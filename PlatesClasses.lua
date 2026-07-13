@@ -14,7 +14,7 @@ local CallbackHandler = LibStub("CallbackHandler-1.0");
 local LibNameplate = LibStub("LibNameplate-1.0");
 local AceTimer = LibStub("AceTimer-3.0");
 
-local addon = AceAddon:NewAddon(ADDON_NAME, "AceConsole-3.0");
+local addon = AceAddon:NewAddon(ADDON_NAME, "AceConsole-3.0"); ---@class PlatesClasses : AceAddon, CallbackRegistryMixin
 addon.path = ADDON_PATH;
 addon.logLevel = LOGLEVEL;
 addon.Utils = {};
@@ -39,13 +39,14 @@ function addon:OnInitialize()
 			Version = 1
 		}
 	};
-	local db = AceDb:New("PlatesClassesDB", dbDefaults, true);
-	db.RegisterCallback(self, "OnProfileChanged", "OnProfileChanged");
-	db.RegisterCallback(self, "OnProfileCopied", "OnProfileChanged");
-	db.RegisterCallback(self, "OnProfileReset", "OnProfileChanged");
-	self:OnProfileChanged("self-call", db)
+	local db = AceDb:New("PlatesClassesDB", nil, true);
+	db.RegisterCallback(self, "OnProfileChanged", addon.OnProfileChanged);
+	db.RegisterCallback(self, "OnProfileCopied",  addon.OnProfileChanged);
+	db.RegisterCallback(self, "OnProfileReset",  addon.OnProfileChanged);
 	
-	log:SetMaximumLogLevel(self.dbRoot.global.LogLevel);
+	self.OnProfileChanged("", db)
+	
+	log:SetMaximumLogLevel(self.dbRoot.global.LogLevel or -1);
 	
 	self.storages = { };
 	
@@ -66,7 +67,7 @@ function addon:OnInitialize()
 end
 
 function addon:BuildBlizzardOptions()
-	local dbConnection = Utils.DbConfig:New(function(key) return self.dbRoot.global end);
+	local dbConnection = Utils.DbConfig:New(function(key) return self.dbRoot.profile end);
 	local options = 
 	{
 		LogLevel = 
@@ -159,7 +160,7 @@ function addon:OnEnable()
 	LibNameplate.RegisterCallback(self, "LibNameplate_FoundGUID", function(event, ...) self:OnNameplateDiscoveredGuid(...) end )
 	LibNameplate.RegisterCallback(self, "LibNameplate_RecycleNameplate", function(event, ...) self:OnNameplateRecycled(...) end )
 	
-	self.timer = AceTimer:ScheduleRepeatingTimer(function() self:UpdateNameplates(true) end, self.db.UpdateFrequency);
+	self.timer = AceTimer:ScheduleRepeatingTimer(function() self:UpdateNameplates(true) end, self.db.UpdateFrequency or 1);
 	
 	self:UpdateNameplates();
 end
@@ -177,7 +178,13 @@ function addon:GetDbMigrations()
 	local migrations = {}
 	migrations[3] = function(db, dbRoot)
 		for moduleName, module in pairs(db.modules) do
-			dbRoot.global.Modules[moduleName] = { Version = module.Version }
+			dbRoot.profile.Modules[moduleName] = { Version = module.Version }
+		end
+	end
+
+	migrations[4] = function(db, dbRoot)
+		for moduleName, module in pairs(db.modules) do
+			dbRoot.profile.Modules[moduleName] = { Version = module.Version or 4}
 		end
 	end
 	
@@ -189,8 +196,8 @@ function addon:InitializeDb(module, moduleDb)
 		module.db = moduleDb;
 	end
 	
-	self.dbRoot.global.Modules = self.dbRoot.global.Modules or {}
-	self.dbRoot.global.Modules[module.name] = self.dbRoot.global.Modules[module.name] or { Version = 0 }
+	self.dbRoot.profile.Modules = self.dbRoot.profile.Modules or {}
+	self.dbRoot.profile.Modules[module.name] = self.dbRoot.profile.Modules[module.name] or { Version = 0 }
 	
 	if module.db.modules == nil then
 		module.db.modules = {}
@@ -200,10 +207,10 @@ function addon:InitializeDb(module, moduleDb)
 		local migrations = module:GetDbMigrations();
 		
 		for migrationVersion, migration in pairs(migrations) do
-			local oldDbVersion = self.dbRoot.global.Modules[module.name].Version;
-			if migrationVersion > self.dbRoot.global.Modules[module.name].Version then
+			local oldDbVersion = self.dbRoot.profile.Modules[module.name].Version or 1;
+			if migrationVersion > oldDbVersion then
 				migration(module.db, self.dbRoot); -- upgrade db to the next version
-				self.dbRoot.global.Modules[module.name].Version = migrationVersion;
+				self.dbRoot.profile.Modules[module.name].Version = migrationVersion;
 				log:Log(3, "Upgraded module '", tostring(module), "'db version from", oldDbVersion, "to", moduleDb.Version);
 			end
 		end
@@ -348,10 +355,11 @@ function addon:GetStorage(categoryName)
 	return storage;
 end
 
-function addon:OnProfileChanged(_, database)
+function addon.OnProfileChanged(event, database)
+	local self = addon
 	self.dbRoot = database;
 	self:InitializeDb(self, database.profile);
-	
+
 	if self.Initialized then
 		self:Disable();
 		if self.db.Enabled then

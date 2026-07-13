@@ -8,8 +8,6 @@ local addon = AceAddon:GetAddon("PlatesClasses");
 local module = addon:NewModule(moduleName);
 local log = LibLogger:New(addon);
 local Utils = addon.Utils;
-local platesClassesModule = addon:GetModule("PlatesClasses");
-local NameRecognizer = Utils.NameRecognizer;
 
 function module:OnInitialize()
 	local storage = addon:CreateStorage()
@@ -29,6 +27,11 @@ end
 
 function module:OnNameplateAppearenceUpdating(eventName, nameplate, fastUpdate)
 	local frame = Utils.ClassIcon:GetOrCreateNameplateFrame(nameplate);
+
+	if not frame.isPet then
+		return
+	end
+
 	frame:UpdateAppearence(self.db.IconSettings);
 end
 
@@ -38,22 +41,57 @@ local familyToIcon =
 	["Felhunter"]                    = [[Interface\Icons\Spell_shadow_summonfelhunter]],
 	["Voidwalker"]                   = [[Interface\Icons\Spell_shadow_summonvoidwalker]],
 	["Imp"]                          = [[Interface\Icons\Spell_shadow_summonimp]],
-	["Crab"]                         = [[Interface\Icons\Ability_hunter_pet_crab]],
 	["Ghoul"]                        = [[Interface\Icons\Spell_DeathKnight_ArmyOfTheDead]],
 	["Boar"]                         = [[Interface\Icons\Ability_hunter_pet_boar]],
 	["Ravager"]						 = [[Interface\Icons\Ability_hunter_pet_ravager]],
+	["Crab"]                         = [[Interface\Icons\Ability_hunter_pet_crab]],
+	["Gorilla"]						 = [[Interface\Icons\ability_hunter_pet_gorilla]],
+	["Wolf"]						 = [[Interface\Icons\ability_hunter_pet_wolf]],
+	["Raptor"]						 = [[Interface\Icons\ability_hunter_pet_raptor]],
+	["Spider"]						 = [[Interface\Icons\ability_hunter_pet_spider]],
+	["Turtle"]						 = [[Interface\Icons\ability_hunter_pet_turtle]],
+	["Chimaera"]					 = [[Interface\Icons\Ability_Hunter_Pet_Chimera]],
+	["Wasp"]						 = [[Interface\Icons\ability_hunter_pet_wasp]],
+	["Cat"]							 = [[Interface\Icons\Ability_hunter_pet_cat]],
+	["Wind Serpent"]				 = [[Interface\Icons\ability_hunter_pet_windserpent]],
+	["Scorpid"]						 = [[Interface\Icons\Ability_hunter_pet_scorpid]],
+	["Worm"]						 = [[Interface\Icons\ability_hunter_pet_worm]],
+	["Rhino"]						 = [[Interface\Icons\ability_hunter_pet_rhino]],
+	["Spirit Beast"]				 = [[Interface\Icons\ability_druid_primalprecision]],
+	["Carrion Bird"]				 = [[Interface\Icons\Ability_hunter_pet_vulture]],
+	["Warp Stalker"]				 = [[Interface\Icons\ability_hunter_pet_warpstalker]],
+	["Sporebat"]					 = [[Interface\Icons\ability_hunter_pet_sporebat]],
+	["Tallstrider"]					 = [[Interface\Icons\ability_hunter_pet_tallstrider]],
+	["Bat"]					 		 = [[Interface\Icons\ability_hunter_pet_bat]],
+	["Crocolisk"] 					 = [[Interface\Icons\ability_hunter_pet_crocolisk]],
+	["Bear"] 						 = [[Interface\Icons\ability_hunter_pet_bear]],
+	["Bird of Prey"]				 = [[Interface\Icons\ability_hunter_pet_owl]],
+	["Moth"]						 = [[Interface\Icons\ability_hunter_pet_moth]],
+	["Dragonhawk"]					 = [[Interface\Icons\ability_hunter_pet_dragonhawk]],
+	["Serpent"]						 = [[Interface\Icons\spell_nature_guardianward]],
+	["Silithid"]					 = [[Interface\Icons\ability_hunter_pet_silithid]],
+	["Devilsaur"]					 = [[Interface\Icons\ability_hunter_pet_devilsaur]],
+	["Hyena"]						 = [[Interface\Icons\ability_hunter_pet_hyena]],
+	["Nether Ray"]					 = [[Interface\Icons\Ability_hunter_pet_netherray]],
 	["NotSupported"]				 = [[Interface\Icons\Inv_box_petcarrier_01]]
 }
 local function UpdatePetNameplateAppearence(nameplateFrame)
 	if nameplateFrame.isPet then
-		local icon = familyToIcon[nameplateFrame.class] 
+		local icon = familyToIcon[nameplateFrame.class]
 		
 		if icon == nil then
 			icon = familyToIcon["NotSupported"]
 			log(3, "Was not found icon for pet with from family '", nameplateFrame.class, "'")
 		end
+
 		nameplateFrame.classTexture:SetTexCoord(0.075, 0.925, 0.075, 0.925);
 		SetPortraitToTexture(nameplateFrame.classTexture, icon);
+
+		if select(1, nameplateFrame.classTexture:GetTexture()) == nil then
+			log(2, "Pet's texture was not set for '", nameplateFrame.class, "'")
+			return
+		end
+
 		nameplateFrame:Show()
 		nameplateFrame.classTexture:Show()
 	end

@@ -4,9 +4,9 @@ local LibLogger = LibStub("LibLogger-1.0");
 local LibEvents = LibStub("LibEvents-1.0");
 local LibNameplate = LibStub("LibNameplate-1.0");
 
-local addon = AceAddon:GetAddon("PlatesClasses");
+local addon = AceAddon:GetAddon("PlatesClasses"); ---@class PlatesClasses : AceAddon
 local displayName = "Players";
-local module = addon:NewModule(moduleName);
+local module = addon:NewModule(moduleName); ---@class PlayersIconsModule : AceModule
 local log = LibLogger:New(addon);
 local Utils = addon.Utils;
 local events = LibEvents:New(module);

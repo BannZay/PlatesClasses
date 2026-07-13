@@ -1,15 +1,44 @@
 {
     "Lua.diagnostics.globals": [
-        "CreateFrame",
-        "SetPortraitToTexture",
         "CLASS_ICON_TCOORDS",
-        "UnitClass",
-        "UnitIsPlayer",
-        "UnitReaction",
         "PLAYER_CLASSES",
-        "UnitName",
         "GetNumPartyMembers",
-        "UnitExists",
-        "LibStub"
+        "LibStub",
+        "SELECTED_CHAT_FRAME",
+        "DEFAULT_CHAT_FRAME",
+        "ACCEPT",
+        "CANCEL",
+        "StaticPopupDialogs",
+        "StaticPopup_Show",
+        "SlashCmdList",
+        "hash_SlashCmdList",
+        "NORMAL_FONT_COLOR_CODE",
+        "FONT_COLOR_CODE_CLOSE",
+        "CLOSE",
+        "PanelTemplates_TabResize",
+        "PanelTemplates_SetDisabledTabState",
+        "PanelTemplates_SelectTab",
+        "PanelTemplates_DeselectTab",
+        "SetDesaturation",
+        "OKAY",
+        "NOT_BOUND",
+        "ColorPickerFrame",
+        "WorldFrame",
+        "RAID_CLASS_COLORS"
+    ],
+    "Lua.runtime.version": "Lua 5.1",
+    "Lua.runtime.builtin": {
+        "basic": "disable",
+        "debug": "disable",
+        "io": "disable",
+        "math": "disable",
+        "os": "disable",
+        "package": "disable",
+        "string": "disable",
+        "table": "disable",
+        "utf8": "disable"
+    },
+    "Lua.workspace.library": [
+        "~\\.vscode\\extensions\\ketho.wow-api-0.22.3\\Annotations\\Core"
     ]
 }

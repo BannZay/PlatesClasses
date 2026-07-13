@@ -13,7 +13,6 @@ local events = LibEvents:New(module);
 
 local framesCreatedCount = 1;
 local maxReaction = 9;
-local active = false;
 local watchers = {}
 local petsMonitorTimer;
 
@@ -42,7 +41,7 @@ end
 
 function module:GetDbMigrations()
 	local migrations = {}
-
+	
 	migrations[1] = function(db, dbRoot)
 		db.Enabled = true;
 		db.MonitorPets = true;
@@ -65,7 +64,7 @@ function module:GetDbMigrations()
 end
 
 function module:OnNameplateAppearenceUpdating(eventName, nameplate, fastUpdate)
-	if active then
+	if module:IsEnabled() then
 		local frame = self:GetOrCreateFrame(nameplate);
 		frame:UpdateAppearence(self.db.IconSettings);
 	end
@@ -73,7 +72,7 @@ end
 
 
 function module:OnNameplateUpdating(eventName, nameplate, fastUpdate, name, unitId)
-	if active then
+	if module:IsEnabled() then
 		local frame = self:GetOrCreateFrame(nameplate);
 
 		if frame.targetName ~= name then
@@ -91,11 +90,17 @@ function module:OnNameplateRecycled(event, nameplate)
 end
 
 function module:SetPetsMonitorEnabled(enabled)
-	if active and petsMonitorTimer == nil then
-		petsMonitorTimer = AceTimer:ScheduleRepeatingTimer(function() if active then module:UpdatePets() end end, module.db.UpdateFrequency or 0.1);
-	elseif petsMonitorTimer ~= nil then
-		AceTimer:CancelTimer(petsMonitorTimer)
-		petsMonitorTimer = nil
+	if enabled and petsMonitorTimer == nil then
+		module:Enable()
+		
+		petsMonitorTimer = AceTimer:ScheduleRepeatingTimer(function() if module:IsEnabled() then module:UpdatePets() end end, module.db.UpdateFrequency or 0.1);
+	else
+		if petsMonitorTimer ~= nil then
+			AceTimer:CancelTimer(petsMonitorTimer)
+			petsMonitorTimer = nil
+		end
+	
+		module:Disable()
 	end
 end
 
@@ -106,8 +111,8 @@ function module:UpdatePets()
 end
 
 function events:UNIT_TARGET(unitId)
-	if active and unitId ~= "player" then
-		if self.db.IconSettings.PetsOnly and unitId:sub(-4, -2) ~= "pet" then 
+	if module:IsEnabled() and unitId ~= "player" then
+		if module.db.IconSettings.PetsOnly and unitId:sub(-4, -2) ~= "pet" then 
 			return
 		end
 		 
@@ -124,9 +129,6 @@ function module:UpdatePlayerLocation()
 	watchers = {}
 
 	local zoneType = select(2, IsInInstance())
-	active = zoneType == "arena"
-
-	active = true;
 
 	local nameplatesList = addon:GetVisibleNameplates();
 	for i = 1, #nameplatesList do

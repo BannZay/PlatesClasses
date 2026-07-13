@@ -15,7 +15,7 @@ local events = LibEvents:New(module)
 local provider = function(nameplate, name) if UnitName("target") == name then return module.db end end
 
 function module:OnInitialize()
-	parent:AddTheme(moduleName, provider, self:BuildBlizzardOptions(), -4)
+	parent:AddTheme(moduleName, provider, self:BuildBlizzardOptions(), 20)
 	events:Disable();
 end
 

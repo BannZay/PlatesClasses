@@ -58,6 +58,7 @@ function util:GetOrCreateNameplateFrame(nameplate)
 			local settings = customSettings;
 			
 			if settings.EnemiesOnly and this.isHostile == false then
+				this:Hide()
 				return
 			end
 			
