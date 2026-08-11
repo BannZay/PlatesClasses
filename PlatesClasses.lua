@@ -78,7 +78,7 @@ function addon:BuildBlizzardOptions()
 			min = -1,
 			max = 100,
 			get = dbConnection.Get,
-			set = dbConnection:BuildSetter(function(value) log:SetMaximumLogLevel(value) end),
+			set = dbConnection:BuildSetter(function(value) log:SetMaximumLogLevel((value or 0) - 1) end),
 			order = 1
 		}
 	}
@@ -262,7 +262,8 @@ function addon:UpdateNameplate(nameplateOrName, fastUpdate, name, unitId)
 	end
 	
 	if type(nameplateOrName) == "string" then
-		nameplateOrName = LibNameplate:GetNameplateByName(nameplateOrName);
+		name = nameplateOrName
+		nameplateOrName = LibNameplate:GetNameplateByName(name); ---@cast nameplateOrName Nameplate
 	end
 	
 	if name == nil and nameplateOrName ~= nil then

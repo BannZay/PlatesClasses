@@ -104,6 +104,10 @@ function module:GetMetadata(nameplate, unitId)
 	local metadata;
 	
 	if unitId ~= nil then
+		if nameplate ~= LibNameplate:GetNameplateByUnit(unitId) then
+			return {} -- nameplate does not match unitId. May be because unit is a mirror image
+		end
+
 		local _, unifiedClass = UnitClass(unitId)
 		local isPlayer = UnitIsPlayer(unitId) == 1;
 		local reaction =  UnitReaction(unitId, "player");
@@ -122,7 +126,7 @@ function module:GetMetadata(nameplate, unitId)
 		if unitType == "PLAYER" then
 			isPlayer = true;
 		elseif unitType == "NPC" then
-			isPlayer = false;
+			isPlayer = true; -- on some private servers (like warmane), on first scan, plate has NPC type for some reason. Mark npcs as players for now...
 		end
 		
 		isHostile = reaction == "HOSTILE";
@@ -165,7 +169,6 @@ function module:ClassToIndex(unifiedClass)
 end
 
 function module:AddUnit(unitId)
-	local storage = addon:GetStorage(self);
 	local name = UnitName(unitId);
 	log:Log(40, "Adding unit '",  unitId ,"' with name '", name ,"'.")
 	
@@ -173,16 +176,26 @@ function module:AddUnit(unitId)
 		local metadata = self:GetMetadata(nil, unitId);
 		log:Log(39, unitId, "resolved to class ", metadata.class);
 		if metadata.isPlayer and metadata.class ~= nil then
+			local storage = addon:GetStorage(self);
 			storage:Set(name, metadata.class);
-			addon:UpdateNameplate(name);
+			addon:UpdateNameplate(name, nil, nil, unitId);
+			return true
 		end
 	end
 end
 
+---@param self PlayersIconsModule
+---@param unit UnitId
+---@param reason string
 function events:ARENA_OPPONENT_UPDATE(unit, reason)
-	log:Log(50, "arena_opponent_update", unit, reason)
+	print("ARENA_OPPONENT_UPDATE", UnitClass(unit), UnitIsPlayer(unit))
+	log:Log(3, "arena_opponent_update", unit, reason)
 	if reason == "seen" then
-		self:AddUnit(unit);
+		local added = self:AddUnit(unit);
+
+		if not added then
+			log(3, "Failed to add unit after ARENA_OPPONENT_UPDATE")
+		end
 	end
 end
 

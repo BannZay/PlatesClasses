@@ -3,8 +3,8 @@ local AceAddon = LibStub("AceAddon-3.0");
 local LibLogger = LibStub("LibLogger-1.0");
 local LibNameplate = LibStub("LibNameplate-1.0");
 
-local addon = AceAddon:GetAddon("PlatesClasses");
-local module = addon:NewModule(moduleName);
+local addon = AceAddon:GetAddon("PlatesClasses"); ---@type PlatesClasses
+local module = addon:NewModule(moduleName); ---@class PlateStyler: AceModule
 local log = LibLogger:New(addon)
 local Utils = addon.Utils;
 

@@ -4,7 +4,7 @@ local LibLogger = LibStub("LibLogger-1.0");
 local LibNameplate = LibStub("LibNameplate-1.0");
 
 local addon =  AceAddon:GetAddon("PlatesClasses")
-local parent = addon:GetModule("Plate Styler");
+local parent = addon:GetModule("Plate Styler"); ---@type PlateStyler
 local module = parent:NewModule(moduleName);
 local log = LibLogger:New(addon);
 local Utils = addon.Utils;
